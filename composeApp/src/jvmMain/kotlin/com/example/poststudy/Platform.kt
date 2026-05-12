@@ -5,4 +5,3 @@ class JVMPlatform {
 }
 
 fun getPlatform() = JVMPlatform()
-//gjidfdffdjkkjdskjkj

@@ -49,16 +49,18 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.example.poststudy"
+            packageName = "PostStudy"
             packageVersion = "1.0.0"
+            description = "Post Study"
+
+            modules("java.sql", "java.naming", "java.desktop", "jdk.unsupported")
 
             windows {
                 shortcut = true
                 menu = true
                 menuGroup = "PostStudy"
-                // iconFile.set(project.file("src/jvmMain/composeResources/drawable/icon.ico")) // Optional: specify icon for installer
+                iconFile.set(project.file("src/jvmMain/composeResources/drawable/icon.ico"))
             }
         }
     }
 }
-//
