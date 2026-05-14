@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.poststudy.data.local.DatabaseHelper
 import com.example.poststudy.domain.model.LessonMode
+import com.example.poststudy.presentation.theme.AppDesign
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,31 +37,23 @@ fun TeacherHomeScreen(
     val settings = remember { DatabaseHelper.getSettings() }
     var currentMode by remember { mutableStateOf(settings.mode) }
 
-    val backgroundGradient = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xFF0F172A),
-            Color(0xFF1E293B),
-            Color(0xFF334155)
-        )
-    )
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundGradient)
+            .background(AppDesign.BackgroundGradient)
     ) {
         Box(
             modifier = Modifier
-                .size(500.dp)
-                .offset(x = (-150).dp, y = (-150).dp)
-                .background(Color(0xFF6366F1).copy(alpha = 0.05f), CircleShape)
+                .size(600.dp)
+                .offset(x = (-200).dp, y = (-200).dp)
+                .background(Color.White.copy(alpha = 0.07f), CircleShape)
         )
         Box(
             modifier = Modifier
                 .size(400.dp)
                 .align(Alignment.BottomEnd)
                 .offset(x = 150.dp, y = 150.dp)
-                .background(Color(0xFF818CF8).copy(alpha = 0.05f), CircleShape)
+                .background(Color.White.copy(alpha = 0.05f), CircleShape)
         )
 
         Scaffold(
@@ -99,7 +92,7 @@ fun TeacherHomeScreen(
                 )
 
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().widthIn(max = 800.dp),
                     horizontalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
                     HomeCard(
@@ -125,33 +118,35 @@ fun TeacherHomeScreen(
                 Surface(
                     modifier = Modifier
                         .width(500.dp)
-                        .shadow(12.dp, RoundedCornerShape(24.dp)),
-                    shape = RoundedCornerShape(24.dp),
-                    color = Color.White.copy(alpha = 0.9f)
+                        .shadow(12.dp, AppDesign.CardShape),
+                    shape = AppDesign.CardShape,
+                    color = Color.White.copy(alpha = 0.95f),
+                    border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF4F46E5).copy(alpha = 0.3f))
                 ) {
                     Column(
-                        modifier = Modifier.padding(24.dp),
+                        modifier = Modifier.padding(32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
                             text = "Aktiv Sessiya Rejimi",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1E293B)
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFF4F46E5)
                         )
                         Text(
                             text = "Talabalar sessiyalari uchun umumiy rejimni o'rnating",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFF64748B),
-                            modifier = Modifier.padding(bottom = 20.dp)
+                            modifier = Modifier.padding(top = 4.dp, bottom = 24.dp)
                         )
 
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(Color(0xFFF1F5F9)),
+                                .height(64.dp)
+                                .clip(AppDesign.ComponentShape)
+                                .background(Color(0xFFF1F5F9))
+                                .padding(4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             ModeToggleButton(
@@ -203,11 +198,12 @@ fun HomeCard(
 ) {
     Surface(
         modifier = modifier
-            .height(170.dp)
+            .height(180.dp)
             .clickable { onClick() }
-            .shadow(8.dp, RoundedCornerShape(28.dp)),
-        shape = RoundedCornerShape(28.dp),
-        color = Color.White
+            .shadow(8.dp, AppDesign.ComponentShape),
+        shape = AppDesign.ComponentShape,
+        color = Color.White,
+        border = androidx.compose.foundation.BorderStroke(2.dp, color.copy(alpha = 0.5f))
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
@@ -215,19 +211,19 @@ fun HomeCard(
         ) {
             Box(
                 modifier = Modifier
-                    .size(58.dp)
-                    .background(color.copy(alpha = 0.2f), CircleShape),
+                    .size(64.dp)
+                    .background(color.copy(alpha = 0.1f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(28.dp))
+                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(32.dp))
             }
 
             Column {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1E293B)
+                    fontWeight = FontWeight.ExtraBold,
+                    color = color
                 )
                 Text(
                     text = subtitle,
@@ -251,23 +247,24 @@ fun ModeToggleButton(
         animationSpec = tween(300)
     )
     val textColor by animateColorAsState(
-        if (isSelected) Color(0xFF6366F1) else Color(0xFF64748B),
+        if (isSelected) Color(0xFF4F46E5) else Color(0xFF64748B),
         animationSpec = tween(300)
     )
+    val shadowAlpha by animateFloatAsState(if (isSelected) 0.1f else 0f)
 
     Box(
         modifier = modifier
             .fillMaxHeight()
-            .padding(4.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(backgroundColor)
+            .then(if (isSelected) Modifier.shadow(2.dp, RoundedCornerShape(12.dp)) else Modifier)
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.labelLarge,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+            fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Bold,
             color = textColor
         )
     }

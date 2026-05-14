@@ -20,6 +20,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.poststudy.data.local.DatabaseHelper
 import com.example.poststudy.domain.model.*
+import com.example.poststudy.presentation.theme.AppDesign
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerMode
 import io.github.vinceglb.filekit.core.PickerType
@@ -43,14 +44,6 @@ fun SettingsScreen(
     
     var selectedMode by remember { mutableStateOf(lessonToEdit?.mode ?: initialSettings.mode) }
     var showSaveDialog by remember { mutableStateOf(false) }
-
-    val backgroundGradient = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xFF0F172A),
-            Color(0xFF1E293B),
-            Color(0xFF334155)
-        )
-    )
 
     val presentationLauncher = rememberFilePickerLauncher(
         type = PickerType.File(extensions = listOf("ppt", "pptx")),
@@ -99,7 +92,7 @@ fun SettingsScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundGradient)
+            .background(AppDesign.BackgroundGradient)
     ) {
         Scaffold(
             containerColor = Color.Transparent,
@@ -133,23 +126,24 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    modifier = Modifier.fillMaxWidth().widthIn(max = 900.dp),
+                    shape = AppDesign.CardShape,
+                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                    border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF4F46E5).copy(alpha = 0.2f))
                 ) {
-                    Column(modifier = Modifier.padding(32.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                    Column(modifier = Modifier.padding(40.dp), verticalArrangement = Arrangement.spacedBy(32.dp)) {
                         SettingsSection(title = "Dars nomi") {
                             OutlinedTextField(
                                 value = title,
                                 onValueChange = { title = it },
                                 label = { Text("masalan, Rim tarixi") },
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp),
+                                shape = AppDesign.ComponentShape,
                                 singleLine = true,
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFF6366F1),
-                                    focusedLabelColor = Color(0xFF6366F1)
+                                    focusedBorderColor = Color(0xFF4F46E5),
+                                    focusedLabelColor = Color(0xFF4F46E5)
                                 )
                             )
                         }
@@ -206,9 +200,13 @@ fun SettingsScreen(
                                         label = { Text("O'rganish (daq)") },
                                         isError = slideTimerMin.isNotEmpty() && (slideTimerMin.toIntOrNull() ?: 0) < 5,
                                         modifier = Modifier.weight(1f),
-                                        shape = RoundedCornerShape(16.dp),
+                                        shape = AppDesign.ComponentShape,
                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                        singleLine = true
+                                        singleLine = true,
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = Color(0xFF4F46E5),
+                                            focusedLabelColor = Color(0xFF4F46E5)
+                                        )
                                     )
                                 }
 
@@ -218,9 +216,13 @@ fun SettingsScreen(
                                     label = { Text("Test (daq)") },
                                     isError = testTimerMin.isNotEmpty() && (testTimerMin.toIntOrNull() ?: 0) < 5,
                                     modifier = Modifier.weight(1f),
-                                    shape = RoundedCornerShape(16.dp),
+                                    shape = AppDesign.ComponentShape,
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    singleLine = true
+                                    singleLine = true,
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = Color(0xFF4F46E5),
+                                        focusedLabelColor = Color(0xFF4F46E5)
+                                    )
                                 )
                             }
                         }
@@ -230,10 +232,10 @@ fun SettingsScreen(
                 Button(
                     onClick = { saveSettings() },
                     enabled = isReady,
-                    modifier = Modifier.width(320.dp).height(64.dp).padding(bottom = 32.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1)),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
+                    modifier = Modifier.width(360.dp).height(68.dp).padding(bottom = 32.dp),
+                    shape = AppDesign.ComponentShape,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFF4F46E5)),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 12.dp)
                 ) {
                     Text("DARSNI SAQLASH", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
                 }
@@ -251,15 +253,15 @@ fun SettingsScreen(
                     showSaveDialog = false
                     saveSettings()
                 }) {
-                    Text("Ha, Saqlash", color = Color(0xFF6366F1), fontWeight = FontWeight.Bold)
+                    Text("Ha, Saqlash", color = Color(0xFF4F46E5), fontWeight = FontWeight.ExtraBold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showSaveDialog = false }) {
-                    Text("Bekor qilish", color = Color(0xFF64748B))
+                    Text("Bekor qilish", color = Color(0xFF64748B), fontWeight = FontWeight.Bold)
                 }
             },
-            shape = RoundedCornerShape(28.dp),
+            shape = AppDesign.CardShape,
             containerColor = Color.White
         )
     }
@@ -275,17 +277,18 @@ fun ModeCard(
 ) {
     Surface(
         onClick = onClick,
-        modifier = modifier.height(100.dp),
-        shape = RoundedCornerShape(16.dp),
+        modifier = modifier.height(110.dp),
+        shape = AppDesign.ComponentShape,
         color = if (isSelected) Color(0xFFEEF2FF) else Color(0xFFF8FAFC),
-        border = if (isSelected) androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF6366F1)) else androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0))
+        border = if (isSelected) androidx.compose.foundation.BorderStroke(3.dp, Color(0xFF4F46E5)) else androidx.compose.foundation.BorderStroke(2.dp, Color(0xFFE2E8F0)),
+        shadowElevation = if (isSelected) 4.dp else 0.dp
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(12.dp),
+            modifier = Modifier.fillMaxSize().padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(text = title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall, color = if (isSelected) Color(0xFF4338CA) else Color(0xFF1E293B))
+            Text(text = title, fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleMedium, color = if (isSelected) Color(0xFF4F46E5) else Color(0xFF1E293B))
             Text(text = description, style = MaterialTheme.typography.bodySmall, color = if (isSelected) Color(0xFF6366F1) else Color(0xFF64748B))
         }
     }
@@ -296,9 +299,9 @@ fun SettingsSection(title: String, content: @Composable () -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = title,
-            style = MaterialTheme.typography.labelLarge,
-            color = Color(0xFF6366F1),
-            fontWeight = FontWeight.ExtraBold,
+            style = MaterialTheme.typography.titleSmall,
+            color = Color(0xFF4F46E5),
+            fontWeight = FontWeight.Black,
             modifier = Modifier.padding(start = 4.dp, bottom = 12.dp)
         )
         content()
@@ -317,20 +320,21 @@ fun FilePickerRow(path: String, label: String, onSelect: () -> Unit) {
             label = { Text(label) },
             modifier = Modifier.weight(1f),
             readOnly = true,
-            shape = RoundedCornerShape(16.dp),
+            shape = AppDesign.ComponentShape,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF6366F1),
+                focusedBorderColor = Color(0xFF4F46E5),
                 unfocusedBorderColor = Color(0xFFE2E8F0)
             )
         )
-        Spacer(modifier = Modifier.width(12.dp))
-        FilledTonalButton(
+        Spacer(modifier = Modifier.width(16.dp))
+        Button(
             onClick = onSelect,
-            shape = RoundedCornerShape(16.dp),
+            shape = AppDesign.ComponentShape,
             modifier = Modifier.height(56.dp),
-            colors = ButtonDefaults.filledTonalButtonColors(containerColor = Color(0xFFF1F5F9))
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF1F5F9), contentColor = Color(0xFF1E293B)),
+            border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFFE2E8F0))
         ) {
-            Text("Tanlash", color = Color(0xFF1E293B), fontWeight = FontWeight.Bold)
+            Text("Tanlash", fontWeight = FontWeight.ExtraBold)
         }
     }
 }

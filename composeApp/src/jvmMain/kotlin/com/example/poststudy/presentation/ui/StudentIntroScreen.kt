@@ -8,6 +8,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -16,12 +19,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.poststudy.domain.model.LessonMode
+import com.example.poststudy.presentation.theme.AppDesign
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,25 +44,17 @@ fun StudentIntroScreen(
         focusRequester.requestFocus()
     }
 
-    val backgroundGradient = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xFF0F172A),
-            Color(0xFF1E293B),
-            Color(0xFF334155)
-        )
-    )
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundGradient)
+            .background(AppDesign.BackgroundGradient)
     ) {
+        // Decorative background elements
         Box(
             modifier = Modifier
-                .size(400.dp)
-                .align(Alignment.BottomEnd)
-                .offset(x = 100.dp, y = 100.dp)
-                .background(Color(0xFF6366F1).copy(alpha = 0.05f), CircleShape)
+                .size(600.dp)
+                .offset(x = (-200).dp, y = (-200).dp)
+                .background(Color.White.copy(alpha = 0.07f), CircleShape)
         )
 
         Scaffold(
@@ -75,7 +71,7 @@ fun StudentIntroScreen(
                 CenterAlignedTopAppBar(
                     title = { 
                         Text(
-                            if (mode == LessonMode.ReAppropriation) "O'quv mashg'uloti brifingi" else "Imtihon mashg'uloti brifingi",
+                            if (mode == LessonMode.ReAppropriation) "Sessiya Brifingi" else "Imtihon Brifingi",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.ExtraBold,
                             color = Color.White
@@ -100,83 +96,83 @@ fun StudentIntroScreen(
             ) {
                 Spacer(modifier = Modifier.height(24.dp))
 
-                Text(
-                    text = if (mode == LessonMode.ReAppropriation) 
-                        "Mashg'ulotga tayyorlaning. Avval taqdimotni o'rganasiz, so'ngra test topshirasiz."
-                    else 
-                        "Imtihonga tayyorlaning. Bu sizning bilimingizni bevosita tekshirishdir.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White.copy(alpha = 0.8f),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 32.dp)
-                )
-
-                Spacer(modifier = Modifier.height(40.dp))
-
-                // Session Stats
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(24.dp)
-                ) {
-                    if (mode == LessonMode.ReAppropriation) {
-                        StatCard(
-                            modifier = Modifier.weight(1f),
-                            title = "Taqdimot",
-                            value = "$totalSlides Slaydlar",
-                            subValue = "Jami ${(totalSlides * slideTimerSeconds) / 60} daqiqa"
-                        )
-                    }
-                    StatCard(
-                        modifier = Modifier.weight(1f),
-                        title = "Bilim testi",
-                        value = "$totalQuestions Savollar",
-                        subValue = "Jami ${testTimerSeconds / 60} daqiqa"
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                // Rules Card
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    modifier = Modifier.widthIn(max = 650.dp).padding(bottom = 32.dp),
+                    shape = AppDesign.CardShape,
+                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
+                    border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF4F46E5).copy(alpha = 0.2f))
                 ) {
-                    Column(modifier = Modifier.padding(32.dp)) {
-                        Text(
-                            text = if (mode == LessonMode.ReAppropriation) "O'qish qoidalari" else "Imtihon qoidalari",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1E293B)
-                        )
-                        Spacer(modifier = Modifier.height(20.dp))
-                        
-                        if (mode == LessonMode.ReAppropriation) {
-                            RuleItem("1. Har bir slaydni taymer tugashidan oldin ko'rib chiqing.")
-                            RuleItem("2. Slaydlarni boshqarish uchun strelkalar yoki tugmalardan foydalaning.")
-                            RuleItem("3. Taqdimotdan so'ng vaqtli test boshlanadi.")
-                        } else {
-                            RuleItem("1. Bu to'g'ridan-to'g'ri imtihon. O'quv materiallari ko'rsatilmaydi.")
+                    Column(
+                        modifier = Modifier.padding(48.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(80.dp)
+                                .background(Color(0xFF4F46E5).copy(alpha = 0.1f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = null,
+                                tint = Color(0xFF4F46E5),
+                                modifier = Modifier.size(40.dp)
+                            )
                         }
-                        
-                        RuleItem("${if (mode == LessonMode.ReAppropriation) "4" else "2"}. Test ko'p variantli. Har bir savol uchun bitta javobni tanlang.")
-                        RuleItem("${if (mode == LessonMode.ReAppropriation) "5" else "3"}. Testda savollar orasida oldinga va orqaga harakat qilishingiz mumkin.")
+
+                        Spacer(modifier = Modifier.height(32.dp))
+
+                        Text(
+                            text = if (mode == LessonMode.ReAppropriation) 
+                                "Mashg'ulotga tayyorlaning. Avval taqdimotni o'rganasiz, so'ngra test topshirasiz."
+                            else 
+                                "Imtihonga tayyorlaning. Bu sizning bilimingizni bevosita tekshirishdir.",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color(0xFF64748B),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            fontWeight = FontWeight.Medium
+                        )
+
+                        Spacer(modifier = Modifier.height(40.dp))
+
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(20.dp)
+                        ) {
+                            if (mode == LessonMode.ReAppropriation) {
+                                IntroRow(
+                                    icon = Icons.AutoMirrored.Filled.MenuBook,
+                                    label = "O'rganish bosqichi:",
+                                    value = "$totalSlides slayd",
+                                    subValue = "${slideTimerSeconds / 60} daqiqa",
+                                    color = Color(0xFFFACC15)
+                                )
+                            }
+
+                            IntroRow(
+                                icon = Icons.Default.Quiz,
+                                label = "Test bosqichi:",
+                                value = "$totalQuestions savol",
+                                subValue = "${testTimerSeconds / 60} daqiqa",
+                                color = Color(0xFF4ADE80)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(48.dp))
+
+                        Button(
+                            onClick = onStart,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(64.dp),
+                            shape = AppDesign.ComponentShape,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4F46E5)),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
+                        ) {
+                            Text("BOSHLASH", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                        }
                     }
-                }
-
-                Spacer(modifier = Modifier.height(56.dp))
-
-                Button(
-                    onClick = onStart,
-                    modifier = Modifier
-                        .width(320.dp)
-                        .height(64.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1)),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
-                ) {
-                    Text(if (mode == LessonMode.ReAppropriation) "TAYYORMAN" else "IMTIHONNI BOSHLASH", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
                 }
                 
                 Spacer(modifier = Modifier.height(40.dp))
@@ -186,28 +182,56 @@ fun StudentIntroScreen(
 }
 
 @Composable
-fun StatCard(modifier: Modifier, title: String, value: String, subValue: String) {
+fun IntroRow(
+    icon: ImageVector,
+    label: String,
+    value: String,
+    subValue: String,
+    color: Color
+) {
     Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(24.dp),
-        color = Color.White.copy(alpha = 0.1f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
+        color = Color(0xFFF8FAFC),
+        shape = AppDesign.ComponentShape,
+        border = androidx.compose.foundation.BorderStroke(2.dp, color.copy(alpha = 0.3f))
     ) {
-        Column(
-            modifier = Modifier.padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Row(
+            modifier = Modifier.padding(20.dp).fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = title, style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.7f))
-            Text(text = value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Color.White)
-            Text(text = subValue, style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.5f))
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(color.copy(alpha = 0.15f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(24.dp))
+            }
+            
+            Spacer(modifier = Modifier.width(20.dp))
+            
+            Column {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFF64748B),
+                    fontWeight = FontWeight.Bold
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = value,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Black,
+                        color = Color(0xFF1E293B)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "• $subValue",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = color,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
+            }
         }
-    }
-}
-
-@Composable
-fun RuleItem(text: String) {
-    Row(modifier = Modifier.padding(vertical = 6.dp)) {
-        Text(text = "•", modifier = Modifier.padding(end = 12.dp), color = Color(0xFF6366F1), fontWeight = FontWeight.Bold)
-        Text(text = text, style = MaterialTheme.typography.bodyLarge, color = Color(0xFF64748B))
     }
 }

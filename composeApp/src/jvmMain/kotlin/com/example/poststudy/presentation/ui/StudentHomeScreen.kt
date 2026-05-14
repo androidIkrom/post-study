@@ -3,7 +3,6 @@ package com.example.poststudy.presentation.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.automirrored.filled.MenuBook
@@ -17,6 +16,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.poststudy.presentation.theme.AppDesign
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,31 +25,23 @@ fun StudentHomeScreen(
     onNavigateToTest: () -> Unit,
     onBack: () -> Unit
 ) {
-    val backgroundGradient = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xFF0F172A),
-            Color(0xFF1E293B),
-            Color(0xFF334155)
-        )
-    )
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundGradient)
+            .background(AppDesign.BackgroundGradient)
     ) {
         Box(
             modifier = Modifier
-                .size(500.dp)
-                .offset(x = (-150).dp, y = (-150).dp)
-                .background(Color(0xFF6366F1).copy(alpha = 0.05f), CircleShape)
+                .size(600.dp)
+                .offset(x = (-200).dp, y = (-200).dp)
+                .background(Color.White.copy(alpha = 0.07f), CircleShape)
         )
         Box(
             modifier = Modifier
                 .size(400.dp)
                 .align(Alignment.BottomEnd)
                 .offset(x = 150.dp, y = 150.dp)
-                .background(Color(0xFF818CF8).copy(alpha = 0.05f), CircleShape)
+                .background(Color.White.copy(alpha = 0.05f), CircleShape)
         )
 
         Scaffold(
@@ -114,7 +106,7 @@ fun StudentHomeScreen(
                         title = "Test topshirish",
                         subtitle = "Bilimingizni sinab ko'ring",
                         icon = Icons.AutoMirrored.Filled.Assignment,
-                        color = Color(0xFF6366F1),
+                        color = Color(0xFF4ADE80),
                         onClick = onNavigateToTest
                     )
                 }
@@ -136,9 +128,10 @@ fun StudentHomeCard(
         onClick = onClick,
         modifier = modifier
             .height(200.dp)
-            .shadow(8.dp, RoundedCornerShape(28.dp)),
-        shape = RoundedCornerShape(28.dp),
-        color = Color.White
+            .shadow(8.dp, AppDesign.ComponentShape),
+        shape = AppDesign.ComponentShape,
+        color = Color.White,
+        border = androidx.compose.foundation.BorderStroke(2.dp, color.copy(alpha = 0.5f))
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
@@ -157,8 +150,8 @@ fun StudentHomeCard(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1E293B)
+                    fontWeight = FontWeight.ExtraBold,
+                    color = color
                 )
                 Text(
                     text = subtitle,

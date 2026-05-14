@@ -3,7 +3,6 @@ package com.example.poststudy.presentation.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Person
@@ -17,60 +16,54 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.poststudy.domain.model.UserRole
+import com.example.poststudy.presentation.theme.AppDesign
 
 @Composable
 fun RoleSelectionScreen(onRoleSelected: (UserRole) -> Unit) {
-    val backgroundGradient = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xFF0F172A),
-            Color(0xFF1E293B),
-            Color(0xFF334155)
-        )
-    )
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundGradient),
+            .background(AppDesign.BackgroundGradient),
         contentAlignment = Alignment.Center
     ) {
         // Subtle decorative circles
         Box(
             modifier = Modifier
-                .size(400.dp)
-                .offset(x = (-100).dp, y = (-100).dp)
-                .background(Color(0xFF6366F1).copy(alpha = 0.05f), CircleShape)
+                .size(600.dp)
+                .offset(x = (-200).dp, y = (-200).dp)
+                .background(Color.White.copy(alpha = 0.07f), CircleShape)
         )
         Box(
             modifier = Modifier
-                .size(300.dp)
+                .size(400.dp)
                 .align(Alignment.BottomEnd)
-                .offset(x = 100.dp, y = 100.dp)
-                .background(Color(0xFF818CF8).copy(alpha = 0.05f), CircleShape)
+                .offset(x = 150.dp, y = 150.dp)
+                .background(Color.White.copy(alpha = 0.05f), CircleShape)
         )
 
         Card(
-            modifier = Modifier.width(600.dp).padding(16.dp),
-            shape = RoundedCornerShape(32.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            modifier = Modifier.width(650.dp).padding(16.dp),
+            shape = AppDesign.CardShape,
+            elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
         ) {
             Column(
                 modifier = Modifier.padding(48.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "PostStudy-ga xush kelibsiz",
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = Color(0xFF1E293B)
+                    text = "PostStudy",
+                    style = MaterialTheme.typography.displayMedium,
+                    fontWeight = FontWeight.Black,
+                    color = Color(0xFF4F46E5)
                 )
                 
                 Text(
                     text = "Boshlash uchun rolingizni tanlang",
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     color = Color(0xFF64748B),
-                    modifier = Modifier.padding(bottom = 48.dp)
+                    modifier = Modifier.padding(top = 8.dp, bottom = 48.dp)
                 )
 
                 Row(
@@ -81,7 +74,7 @@ fun RoleSelectionScreen(onRoleSelected: (UserRole) -> Unit) {
                         title = "O'qituvchi",
                         subtitle = "Yaratish va boshqarish",
                         icon = Icons.Default.Person,
-                        color = Color(0xFF6366F1),
+                        color = Color(0xFF4F46E5),
                         modifier = Modifier.weight(1f),
                         onClick = { onRoleSelected(UserRole.Teacher) }
                     )
@@ -90,7 +83,7 @@ fun RoleSelectionScreen(onRoleSelected: (UserRole) -> Unit) {
                         title = "Talaba",
                         subtitle = "O'rganish va test",
                         icon = Icons.Default.School,
-                        color = Color(0xFFFACC15),
+                        color = Color(0xFFC026D3),
                         modifier = Modifier.weight(1f),
                         onClick = { onRoleSelected(UserRole.Student) }
                     )
@@ -111,10 +104,11 @@ fun RoleSelectionCard(
 ) {
     Surface(
         onClick = onClick,
-        modifier = modifier.height(220.dp),
-        shape = RoundedCornerShape(24.dp),
-        color = Color(0xFFF8FAFC),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0))
+        modifier = modifier.height(240.dp),
+        shape = AppDesign.ComponentShape,
+        color = Color.White,
+        border = androidx.compose.foundation.BorderStroke(2.dp, color.copy(alpha = 0.5f)),
+        shadowElevation = 4.dp
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
@@ -123,23 +117,25 @@ fun RoleSelectionCard(
         ) {
             Box(
                 modifier = Modifier
-                    .size(64.dp)
+                    .size(80.dp)
                     .background(color.copy(alpha = 0.1f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(32.dp))
+                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(40.dp))
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1E293B)
+                fontWeight = FontWeight.ExtraBold,
+                color = color
             )
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF64748B)
+                color = Color(0xFF64748B),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
         }
     }

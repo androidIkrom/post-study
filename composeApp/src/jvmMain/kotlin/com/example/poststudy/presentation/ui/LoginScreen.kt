@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.poststudy.data.local.DatabaseHelper
+import com.example.poststudy.presentation.theme.AppDesign
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,25 +50,17 @@ fun LoginScreen(
         }
     }
 
-    val backgroundGradient = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xFF0F172A),
-            Color(0xFF1E293B),
-            Color(0xFF334155)
-        )
-    )
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundGradient)
+            .background(AppDesign.BackgroundGradient)
     ) {
         // Subtle decorative circles
         Box(
             modifier = Modifier
-                .size(500.dp)
-                .offset(x = (-150).dp, y = (-150).dp)
-                .background(Color(0xFF6366F1).copy(alpha = 0.05f), CircleShape)
+                .size(600.dp)
+                .offset(x = (-200).dp, y = (-200).dp)
+                .background(Color.White.copy(alpha = 0.07f), CircleShape)
         )
 
         Scaffold(
@@ -99,10 +92,11 @@ fun LoginScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Card(
-                    modifier = Modifier.width(450.dp).padding(16.dp),
-                    shape = RoundedCornerShape(28.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                    modifier = Modifier.width(480.dp).padding(16.dp),
+                    shape = AppDesign.CardShape,
+                    elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
+                    border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF4F46E5).copy(alpha = 0.2f))
                 ) {
                     Column(
                         modifier = Modifier.padding(40.dp).fillMaxWidth(),
@@ -112,27 +106,29 @@ fun LoginScreen(
                             text = if (isRegistered) "Xush kelibsiz" else "Hisob yaratish",
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFF1E293B)
+                            color = Color(0xFF4F46E5)
                         )
                         
                         Text(
                             text = if (isRegistered) "Davom etish uchun tizimga kiring" else "O'qituvchi profilini sozlang",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color(0xFF64748B),
-                            modifier = Modifier.padding(bottom = 32.dp)
+                            modifier = Modifier.padding(top = 4.dp, bottom = 32.dp)
                         )
 
                         if (errorMessage.isNotEmpty()) {
                             Surface(
                                 color = Color(0xFFFEE2E2),
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)
+                                shape = AppDesign.ComponentShape,
+                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF4444).copy(alpha = 0.5f)),
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
                             ) {
                                 Text(
                                     text = errorMessage,
                                     color = Color(0xFF991B1B),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    modifier = Modifier.padding(12.dp)
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(16.dp),
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )
                             }
                         }
@@ -142,11 +138,11 @@ fun LoginScreen(
                             onValueChange = { username = it; errorMessage = "" },
                             label = { Text("Foydalanuvchi nomi") },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
+                            shape = AppDesign.ComponentShape,
                             singleLine = true,
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF6366F1),
-                                focusedLabelColor = Color(0xFF6366F1)
+                                focusedBorderColor = Color(0xFF4F46E5),
+                                focusedLabelColor = Color(0xFF4F46E5)
                             )
                         )
 
@@ -158,11 +154,11 @@ fun LoginScreen(
                             label = { Text("Parol") },
                             visualTransformation = PasswordVisualTransformation(),
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
+                            shape = AppDesign.ComponentShape,
                             singleLine = true,
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF6366F1),
-                                focusedLabelColor = Color(0xFF6366F1)
+                                focusedBorderColor = Color(0xFF4F46E5),
+                                focusedLabelColor = Color(0xFF4F46E5)
                             )
                         )
 
@@ -174,27 +170,28 @@ fun LoginScreen(
                                 label = { Text("Parolni tasdiqlang") },
                                 visualTransformation = PasswordVisualTransformation(),
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp),
+                                shape = AppDesign.ComponentShape,
                                 singleLine = true,
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFF6366F1),
-                                    focusedLabelColor = Color(0xFF6366F1)
+                                    focusedBorderColor = Color(0xFF4F46E5),
+                                    focusedLabelColor = Color(0xFF4F46E5)
                                 )
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(40.dp))
 
                         Button(
                             onClick = handleAction,
-                            modifier = Modifier.fillMaxWidth().height(56.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1))
+                            modifier = Modifier.fillMaxWidth().height(60.dp),
+                            shape = AppDesign.ComponentShape,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4F46E5)),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
                         ) {
                             Text(
                                 text = if (isRegistered) "Kirish" else "Ro'yxatdan o'tish",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.ExtraBold
                             )
                         }
                     }

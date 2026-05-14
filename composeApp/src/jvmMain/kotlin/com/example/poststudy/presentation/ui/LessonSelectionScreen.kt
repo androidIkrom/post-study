@@ -2,27 +2,27 @@ package com.example.poststudy.presentation.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.poststudy.data.local.DatabaseHelper
 import com.example.poststudy.domain.model.Lesson
+import com.example.poststudy.domain.model.LessonMode
+import com.example.poststudy.presentation.theme.AppDesign
 import com.example.poststudy.presentation.ui.components.PostStudyDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,16 +35,15 @@ fun LessonSelectionScreen(
     onViewHistory: () -> Unit,
     onBack: () -> Unit
 ) {
-    var lessons by remember { mutableStateOf(DatabaseHelper.getAllLessons()) }
+    val lessons = remember { mutableStateListOf<Lesson>() }
+    var isLoading by remember { mutableStateOf(true) }
     var lessonToDelete by remember { mutableStateOf<Lesson?>(null) }
 
-    val backgroundGradient = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xFF0F172A),
-            Color(0xFF1E293B),
-            Color(0xFF334155)
-        )
-    )
+    LaunchedEffect(Unit) {
+        lessons.clear()
+        lessons.addAll(DatabaseHelper.getAllLessons())
+        isLoading = false
+    }
 
     if (lessonToDelete != null) {
         PostStudyDialog(
@@ -56,7 +55,7 @@ fun LessonSelectionScreen(
             onConfirm = {
                 lessonToDelete?.let {
                     DatabaseHelper.deleteLesson(it.id)
-                    lessons = DatabaseHelper.getAllLessons()
+                    lessons.remove(it)
                 }
                 lessonToDelete = null
             }
@@ -66,20 +65,13 @@ fun LessonSelectionScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundGradient)
+            .background(AppDesign.BackgroundGradient)
     ) {
-        Box(
-            modifier = Modifier
-                .size(400.dp)
-                .offset(x = (-100).dp, y = (-100).dp)
-                .background(Color(0xFF6366F1).copy(alpha = 0.05f), CircleShape)
-        )
-
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
-                CenterAlignedTopAppBar(
-                    title = { Text("Saqlangan Darslar", fontWeight = FontWeight.ExtraBold, color = Color.White) },
+                TopAppBar(
+                    title = { Text(if (isTeacher) "Darslar Ro'yxati" else "Dars Tanlash", color = Color.White, fontWeight = FontWeight.ExtraBold) },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Orqaga", tint = Color.White)
@@ -88,46 +80,48 @@ fun LessonSelectionScreen(
                     actions = {
                         if (isTeacher) {
                             IconButton(onClick = onViewHistory) {
-                                Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Tarixni ko'rish", tint = Color.White)
+                                Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Tarix", tint = Color.White)
+                            }
+                            IconButton(onClick = onAddNewLesson) {
+                                Icon(Icons.Default.Add, contentDescription = "Qo'shish", tint = Color.White)
                             }
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
                 )
-            },
-            floatingActionButton = {
-                if (isTeacher) {
-                    ExtendedFloatingActionButton(
-                        onClick = onAddNewLesson,
-                        icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                        text = { Text("Yangi dars yaratish", fontWeight = FontWeight.Bold) },
-                        containerColor = Color(0xFF6366F1),
-                        contentColor = Color.White,
-                        shape = RoundedCornerShape(20.dp)
-                    )
-                }
             }
         ) { paddingValues ->
-            if (lessons.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize().padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        "Hozircha saqlangan darslar yo'q.\nBoshlash uchun yangi dars yarating!",
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = Color.White.copy(alpha = 0.6f)
-                    )
+            if (isLoading) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = Color.White)
+                }
+            } else if (lessons.isEmpty()) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, modifier = Modifier.size(64.dp), tint = Color.White.copy(alpha = 0.5f))
+                        Spacer(Modifier.height(16.dp))
+                        Text("Darslar hali qo'shilmagan", color = Color.White.copy(alpha = 0.7f))
+                        if (isTeacher) {
+                            Button(
+                                onClick = onAddNewLesson,
+                                modifier = Modifier.padding(top = 24.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFF4F46E5)),
+                                shape = AppDesign.ComponentShape
+                            ) {
+                                Text("Birinchi darsni yaratish", fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
                 }
             } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize().padding(paddingValues),
-                    contentPadding = PaddingValues(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 350.dp),
+                    modifier = Modifier.fillMaxSize().padding(paddingValues).padding(24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
                     items(lessons) { lesson ->
-                        LessonItem(
+                        LessonCard(
                             lesson = lesson,
                             isTeacher = isTeacher,
                             onSelect = { onLessonSelected(lesson) },
@@ -142,68 +136,93 @@ fun LessonSelectionScreen(
 }
 
 @Composable
-fun LessonItem(
+fun LessonCard(
     lesson: Lesson,
     isTeacher: Boolean,
     onSelect: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    Surface(
+        onClick = onSelect,
+        modifier = Modifier.fillMaxWidth().height(180.dp),
+        shape = AppDesign.CardShape,
+        color = Color.White.copy(alpha = 0.95f),
+        border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF4F46E5).copy(alpha = 0.3f)),
+        shadowElevation = 8.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = lesson.title,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Black,
+                        color = Color(0xFF1E293B)
+                    )
+                    Text(
+                        text = if (lesson.mode == LessonMode.ReAppropriation) "O'rganish va Test" else "Faqat Test",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF4F46E5),
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
+                
+                if (isTeacher) {
+                    Row {
+                        IconButton(onClick = onEdit) {
+                            Icon(Icons.Default.Edit, contentDescription = "Tahrirlash", tint = Color(0xFF64748B))
+                        }
+                        IconButton(onClick = onDelete) {
+                            Icon(Icons.Default.Delete, contentDescription = "O'chirish", tint = Color(0xFFEF4444))
+                        }
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                InfoBadge(
+                    icon = Icons.Default.Timer,
+                    text = "${lesson.testTimerSeconds / 60} daq test",
+                    color = Color(0xFF0EA5E9)
+                )
+                if (lesson.mode == LessonMode.ReAppropriation) {
+                    InfoBadge(
+                        icon = Icons.AutoMirrored.Filled.MenuBook,
+                        text = "${lesson.slideTimerSeconds / 60} daq dars",
+                        color = Color(0xFFFACC15)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun InfoBadge(icon: ImageVector, text: String, color: Color) {
+    Surface(
+        color = color.copy(alpha = 0.1f),
+        shape = CircleShape,
+        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.3f))
     ) {
         Row(
-            modifier = Modifier.padding(24.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = lesson.title,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1E293B)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "O'rganish: ${lesson.slideTimerSeconds / 60}daq | Test: ${lesson.testTimerSeconds / 60}daq",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF64748B)
-                )
-            }
-            
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (isTeacher) {
-                    IconButton(
-                        onClick = onEdit,
-                        modifier = Modifier.background(Color(0xFF6366F1).copy(alpha = 0.1f), CircleShape)
-                    ) {
-                        Icon(Icons.Default.Edit, contentDescription = "Tahrirlash", tint = Color(0xFF6366F1))
-                    }
-                    
-                    IconButton(
-                        onClick = onDelete,
-                        modifier = Modifier.background(Color(0xFFEF4444).copy(alpha = 0.1f), CircleShape)
-                    ) {
-                        Icon(Icons.Default.Delete, contentDescription = "O'chirish", tint = Color(0xFFEF4444))
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-                
-                Button(
-                    onClick = onSelect,
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1)),
-                    modifier = Modifier.height(48.dp)
-                ) {
-                    Icon(Icons.Default.PlayArrow, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Boshlash", fontWeight = FontWeight.Bold)
-                }
-            }
+            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(text = text, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = color)
         }
     }
 }

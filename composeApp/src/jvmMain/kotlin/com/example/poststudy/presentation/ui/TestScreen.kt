@@ -4,7 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -21,9 +21,9 @@ import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.poststudy.domain.model.Question
+import com.example.poststudy.presentation.theme.AppDesign
 import com.example.poststudy.presentation.ui.components.PostStudyDialog
 import kotlinx.coroutines.delay
-import java.awt.image.BufferedImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,14 +42,6 @@ fun TestScreen(
     var showBackDialog by remember { mutableStateOf(false) }
     var showCheatHint by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
-
-    val backgroundGradient = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xFF0F172A),
-            Color(0xFF1E293B),
-            Color(0xFF334155)
-        )
-    )
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
@@ -78,7 +70,7 @@ fun TestScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundGradient)
+            .background(AppDesign.BackgroundGradient)
     ) {
         Scaffold(
             containerColor = Color.Transparent,
@@ -132,14 +124,15 @@ fun TestScreen(
                     actions = {
                         Surface(
                             color = Color(0xFFEF4444),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = AppDesign.ComponentShape,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.3f)),
                             modifier = Modifier.padding(end = 16.dp)
                         ) {
                             val minutes = timeLeftSeconds / 60
                             val seconds = timeLeftSeconds % 60
                             Text(
                                 text = "%d:%02d".format(minutes, seconds),
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = Color.White
@@ -170,38 +163,39 @@ fun TestScreen(
                 LinearProgressIndicator(
                     progress = { (currentQuestionIndex + 1).toFloat() / questions.size },
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxWidth(0.8f)
                         .padding(bottom = 32.dp)
-                        .height(10.dp)
-                        .clip(RoundedCornerShape(5.dp)),
-                    color = Color(0xFF6366F1),
-                    trackColor = Color.White.copy(alpha = 0.1f)
+                        .height(12.dp)
+                        .clip(CircleShape),
+                    color = Color.White,
+                    trackColor = Color.White.copy(alpha = 0.2f)
                 )
 
                 Card(
-                    modifier = Modifier.fillMaxWidth().widthIn(max = 800.dp),
-                    shape = RoundedCornerShape(32.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    modifier = Modifier.fillMaxWidth().widthIn(max = 850.dp),
+                    shape = AppDesign.CardShape,
+                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                    border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF4F46E5).copy(alpha = 0.2f))
                 ) {
-                    Column(modifier = Modifier.padding(40.dp)) {
+                    Column(modifier = Modifier.padding(48.dp)) {
                         Text(
                             text = "${currentQuestionIndex + 1} / ${questions.size}-savol",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = Color(0xFF6366F1),
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color(0xFF4F46E5),
+                            fontWeight = FontWeight.ExtraBold
                         )
                         
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
                         
                         Text(
                             text = currentQuestion.text,
                             style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = FontWeight.Black,
                             color = Color(0xFF1E293B)
                         )
 
-                        Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(40.dp))
 
                         currentQuestion.options.forEachIndexed { index, option ->
                             val isCorrectHint = showCheatHint && index == currentQuestion.correctIndex
@@ -212,44 +206,45 @@ fun TestScreen(
                                 isHint = isCorrectHint,
                                 onClick = { selectedAnswers[currentQuestionIndex] = index }
                             )
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(48.dp))
 
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    modifier = Modifier.fillMaxWidth().widthIn(max = 850.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedButton(
                         onClick = { if (currentQuestionIndex > 0) currentQuestionIndex-- },
                         enabled = currentQuestionIndex > 0,
-                        modifier = Modifier.height(60.dp).width(180.dp),
-                        shape = RoundedCornerShape(20.dp),
+                        modifier = Modifier.height(64.dp).width(200.dp),
+                        shape = AppDesign.ComponentShape,
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.3f))
+                        border = androidx.compose.foundation.BorderStroke(2.dp, Color.White.copy(alpha = 0.5f))
                     ) {
-                        Text("Oldingi", fontWeight = FontWeight.Bold)
+                        Text("Oldingi", fontWeight = FontWeight.ExtraBold)
                     }
 
                     Button(
                         onClick = handleNextSubmit,
-                        modifier = Modifier.height(60.dp).width(180.dp),
-                        shape = RoundedCornerShape(20.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1))
+                        modifier = Modifier.height(64.dp).width(200.dp),
+                        shape = AppDesign.ComponentShape,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFF4F46E5)),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
                     ) {
                         Text(
                             text = if (currentQuestionIndex < questions.size - 1) "Keyingisi" else "Yakunlash",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Black
                         )
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(40.dp))
             }
         }
     }
@@ -284,42 +279,44 @@ fun TestScreen(
 
 @Composable
 fun OptionCard(text: String, isSelected: Boolean, isHint: Boolean = false, onClick: () -> Unit) {
+    val borderColor = when {
+        isHint -> Color(0xFF10B981)
+        isSelected -> Color(0xFF4F46E5)
+        else -> Color(0xFFE2E8F0)
+    }
+    
+    val backgroundColor = when {
+        isHint -> Color(0xFFECFDF5)
+        isSelected -> Color(0xFFEEF2FF)
+        else -> Color.Transparent
+    }
+
     Surface(
         modifier = Modifier.fillMaxWidth().clickable { onClick() },
-        shape = RoundedCornerShape(20.dp),
-        color = when {
-            isHint -> Color(0xFFECFDF5)
-            isSelected -> Color(0xFFEEF2FF)
-            else -> Color.Transparent
-        },
-        border = androidx.compose.foundation.BorderStroke(
-            2.dp,
-            when {
-                isHint -> Color(0xFF10B981)
-                isSelected -> Color(0xFF6366F1)
-                else -> Color(0xFFF1F5F9)
-            }
-        )
+        shape = AppDesign.ComponentShape,
+        color = backgroundColor,
+        border = androidx.compose.foundation.BorderStroke(2.dp, borderColor)
     ) {
         Row(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.padding(24.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             RadioButton(
                 selected = isSelected,
                 onClick = onClick,
                 colors = RadioButtonDefaults.colors(
-                    selectedColor = if (isHint) Color(0xFF10B981) else Color(0xFF6366F1)
+                    selectedColor = if (isHint) Color(0xFF10B981) else Color(0xFF4F46E5),
+                    unselectedColor = Color(0xFF94A3B8)
                 )
             )
             Text(
                 text = text,
-                modifier = Modifier.padding(start = 12.dp),
+                modifier = Modifier.padding(start = 16.dp),
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Bold,
                 color = when {
                     isHint -> Color(0xFF065F46)
-                    isSelected -> Color(0xFF4338CA)
+                    isSelected -> Color(0xFF4F46E5)
                     else -> Color(0xFF475569)
                 }
             )
