@@ -38,6 +38,7 @@ kotlin {
             implementation(libs.poi.scratchpad)
             implementation(libs.exposed.jdbc)
             implementation(libs.sqlite.jdbc)
+            implementation(libs.gson)
         }
     }
 }

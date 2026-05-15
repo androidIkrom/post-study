@@ -40,9 +40,9 @@ fun ResultScreen(
     val focusRequester = remember { FocusRequester() }
 
     val scoreColor = when {
-        percentage >= 80 -> Color(0xFF4ADE80)
-        percentage >= 60 -> Color(0xFFFACC15)
-        else -> Color(0xFFEF4444)
+        percentage >= 80 -> Color(0xFF10B981) // Emerald
+        percentage >= 60 -> Color(0xFFF59E0B) // Amber
+        else -> Color(0xFFEF4444) // Red
     }
 
     LaunchedEffect(Unit) {
@@ -54,6 +54,14 @@ fun ResultScreen(
             .fillMaxSize()
             .background(AppDesign.BackgroundGradient)
     ) {
+        // Decorative background elements
+        Box(
+            modifier = Modifier
+                .size(600.dp)
+                .offset(x = (-200).dp, y = (-200).dp)
+                .background(scoreColor.copy(alpha = 0.05f), CircleShape)
+        )
+
         Scaffold(
             containerColor = Color.Transparent,
             modifier = Modifier
@@ -66,10 +74,10 @@ fun ResultScreen(
                 },
             topBar = {
                 CenterAlignedTopAppBar(
-                    title = { Text("Natijalar Tahlili", fontWeight = FontWeight.ExtraBold, color = Color.White) },
+                    title = { Text("Natijalar Tahlili", fontWeight = FontWeight.Black, color = Color(0xFF1E293B)) },
                     navigationIcon = {
                         IconButton(onClick = onFinish) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Orqaga", tint = Color.White)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Orqaga", tint = Color(0xFF1E293B))
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
@@ -83,37 +91,37 @@ fun ResultScreen(
                 Spacer(modifier = Modifier.height(24.dp))
                 
                 Card(
-                    modifier = Modifier.fillMaxWidth().widthIn(max = 650.dp),
+                    modifier = Modifier.fillMaxWidth().widthIn(max = 700.dp),
                     shape = AppDesign.CardShape,
-                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
-                    border = androidx.compose.foundation.BorderStroke(2.dp, scoreColor.copy(alpha = 0.3f))
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 20.dp),
+                    border = androidx.compose.foundation.BorderStroke(4.dp, scoreColor.copy(alpha = 0.4f))
                 ) {
                     Column(
-                        modifier = Modifier.padding(40.dp),
+                        modifier = Modifier.padding(48.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
                             text = "Sizning yakuniy natijangiz",
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleLarge,
                             color = Color(0xFF64748B),
-                            fontWeight = FontWeight.ExtraBold
+                            fontWeight = FontWeight.Black
                         )
                         Text(
                             text = studentName,
-                            style = MaterialTheme.typography.displaySmall,
+                            style = MaterialTheme.typography.displayMedium,
                             fontWeight = FontWeight.Black,
                             color = Color(0xFF1E293B),
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
                         
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(32.dp))
 
                         Box(
                             modifier = Modifier
-                                .size(180.dp)
+                                .size(220.dp)
                                 .background(scoreColor.copy(alpha = 0.1f), CircleShape)
-                                .border(4.dp, scoreColor.copy(alpha = 0.5f), CircleShape),
+                                .border(6.dp, scoreColor, CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -125,38 +133,39 @@ fun ResultScreen(
                                 )
                                 Text(
                                     text = "$correctCount / ${questions.size}",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = scoreColor.copy(alpha = 0.7f)
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Black,
+                                    color = scoreColor.copy(alpha = 0.8f)
                                 )
                             }
                         }
                         
-                        Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(48.dp))
 
                         val timeMinutes = timeSpentSeconds / 60
                         val timeSeconds = timeSpentSeconds % 60
                         Surface(
                             color = Color(0xFFF1F5F9),
-                            shape = CircleShape
+                            shape = CircleShape,
+                            border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFFE2E8F0))
                         ) {
                             Text(
                                 text = "Sarflangan vaqt: %d:%02d".format(timeMinutes, timeSeconds),
-                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.ExtraBold,
+                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 12.dp),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Black,
                                 color = Color(0xFF475569)
                             )
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(40.dp))
 
                 LazyColumn(
-                    modifier = Modifier.weight(1f).fillMaxWidth().widthIn(max = 850.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(bottom = 32.dp)
+                    modifier = Modifier.weight(1f).fillMaxWidth().widthIn(max = 900.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp),
+                    contentPadding = PaddingValues(bottom = 48.dp)
                 ) {
                     itemsIndexed(questions) { index, question ->
                         val userAnswerIndex = userAnswers.getOrNull(index)
@@ -165,30 +174,31 @@ fun ResultScreen(
                         Card(
                             modifier = Modifier.fillMaxWidth().animateContentSize(),
                             shape = AppDesign.CardShape,
-                            colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                             border = androidx.compose.foundation.BorderStroke(
-                                2.dp, 
-                                if (isCorrect) Color(0xFF4ADE80).copy(alpha = 0.3f) else Color(0xFFEF4444).copy(alpha = 0.3f)
+                                3.dp, 
+                                if (isCorrect) Color(0xFF10B981).copy(alpha = 0.3f) else Color(0xFFEF4444).copy(alpha = 0.3f)
                             )
                         ) {
-                            Column(modifier = Modifier.padding(24.dp)) {
+                            Column(modifier = Modifier.padding(32.dp)) {
                                 Row(verticalAlignment = Alignment.Top) {
                                     Surface(
-                                        color = if (isCorrect) Color(0xFF4ADE80).copy(alpha = 0.1f) else Color(0xFFEF4444).copy(alpha = 0.1f),
+                                        color = if (isCorrect) Color(0xFF10B981).copy(alpha = 0.1f) else Color(0xFFEF4444).copy(alpha = 0.1f),
                                         shape = CircleShape,
-                                        modifier = Modifier.size(40.dp),
-                                        border = androidx.compose.foundation.BorderStroke(2.dp, if (isCorrect) Color(0xFF4ADE80) else Color(0xFFEF4444))
+                                        modifier = Modifier.size(48.dp),
+                                        border = androidx.compose.foundation.BorderStroke(3.dp, if (isCorrect) Color(0xFF10B981) else Color(0xFFEF4444))
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
                                             Text(
                                                 text = "${index + 1}",
-                                                style = MaterialTheme.typography.titleMedium,
+                                                style = MaterialTheme.typography.headlineSmall,
                                                 fontWeight = FontWeight.Black,
-                                                color = if (isCorrect) Color(0xFF4ADE80) else Color(0xFFEF4444)
+                                                color = if (isCorrect) Color(0xFF10B981) else Color(0xFFEF4444)
                                             )
                                         }
                                     }
-                                    Spacer(modifier = Modifier.width(20.dp))
+                                    Spacer(modifier = Modifier.width(24.dp))
                                     Text(
                                         text = question.text,
                                         style = MaterialTheme.typography.titleLarge,
@@ -197,7 +207,7 @@ fun ResultScreen(
                                     )
                                 }
                                 
-                                Spacer(modifier = Modifier.height(24.dp))
+                                Spacer(modifier = Modifier.height(32.dp))
 
                                 val userAnswerText = userAnswerIndex?.let { question.options.getOrNull(it) } ?: "O'tkazib yuborildi"
                                 val correctAnswerText = question.options[question.correctIndex]
@@ -210,7 +220,7 @@ fun ResultScreen(
                                 )
 
                                 if (!isCorrect) {
-                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Spacer(modifier = Modifier.height(16.dp))
                                     ResultDetailBox(
                                         label = "To'g'ri javob",
                                         text = correctAnswerText,
@@ -225,12 +235,12 @@ fun ResultScreen(
 
                 Button(
                     onClick = onFinish,
-                    modifier = Modifier.padding(vertical = 32.dp).fillMaxWidth().widthIn(max = 400.dp).height(64.dp),
+                    modifier = Modifier.padding(vertical = 32.dp).width(400.dp).height(72.dp),
                     shape = AppDesign.ComponentShape,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFF4F46E5)),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981), contentColor = Color.White),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 12.dp)
                 ) {
-                    Text("TAYYOR", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                    Text("TAYYOR", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
                 }
             }
         }
@@ -243,19 +253,19 @@ fun ResultDetailBox(label: String, text: String, color: Color, backgroundColor: 
         color = backgroundColor,
         shape = AppDesign.ComponentShape,
         modifier = Modifier.fillMaxWidth(),
-        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.2f))
+        border = androidx.compose.foundation.BorderStroke(2.dp, color.copy(alpha = 0.2f))
     ) {
-        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = "$label: ",
-                style = MaterialTheme.typography.labelLarge,
+                style = MaterialTheme.typography.titleMedium,
                 color = Color(0xFF64748B),
                 fontWeight = FontWeight.Bold
             )
             Text(
                 text = text,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.ExtraBold,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Black,
                 color = color
             )
         }

@@ -11,6 +11,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.unit.dp
 import com.example.poststudy.data.local.DatabaseHelper
+import com.example.poststudy.data.network.NetworkManager
+import com.example.poststudy.data.network.SessionData
 import com.example.poststudy.data.util.PptConverter
 import com.example.poststudy.data.util.TestParser
 import com.example.poststudy.domain.model.*
@@ -40,6 +42,9 @@ fun App() {
     var currentLessonTitle by remember { mutableStateOf("Tezkor sessiya") }
     var currentSessionMode by remember { mutableStateOf(LessonMode.ReAppropriation) }
 
+    var isNetworkMode by remember { mutableStateOf(false) }
+    var serverIp by remember { mutableStateOf("") }
+
     PostStudyTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -47,14 +52,34 @@ fun App() {
         ) {
             Crossfade(targetState = currentScreen) { screen ->
                 when (screen) {
-                    is Screen.RoleSelection -> RoleSelectionScreen { role ->
-                        selectedRole = role
-                        if (role == UserRole.Teacher) {
-                            currentScreen = Screen.Login
-                        } else {
-                            currentScreen = Screen.StudentHome
+                    is Screen.RoleSelection -> RoleSelectionScreen(
+                        onRoleSelected = { role ->
+                            selectedRole = role
+                            isNetworkMode = false
+                            if (role == UserRole.Teacher) {
+                                currentScreen = Screen.Login
+                            } else {
+                                currentScreen = Screen.StudentHome
+                            }
+                        },
+                        onJoinNetwork = {
+                            selectedRole = UserRole.Student
+                            isNetworkMode = true
+                            currentScreen = Screen.NetworkConnect
                         }
-                    }
+                    )
+                    is Screen.NetworkConnect -> NetworkConnectScreen(
+                        onConnected = { ip, session ->
+                            serverIp = ip
+                            currentLessonTitle = session.title
+                            questions = session.questions
+                            slideTimer = session.slideTimerSeconds
+                            testTimer = session.testTimerSeconds
+                            currentSessionMode = session.mode
+                            currentScreen = Screen.StudentIntro
+                        },
+                        onBack = { currentScreen = Screen.RoleSelection }
+                    )
                     is Screen.StudentHome -> StudentHomeScreen(
                         onNavigateToPreparation = { currentScreen = Screen.PreparationLessonSelection },
                         onNavigateToTest = { 
@@ -103,7 +128,27 @@ fun App() {
                         }
                     }
                     is Screen.Login -> LoginScreen(
-                        onLoginSuccess = { currentScreen = Screen.TeacherIntro },
+                        onLoginSuccess = { 
+                            // Start server when teacher logs in
+                            NetworkManager.startServer(
+                                getSession = {
+                                    val s = DatabaseHelper.getSettings()
+                                    val qList = TestParser.parseTest(s.testPath).questions
+                                    val count = if (s.questionsPerStudent > 0) minOf(s.questionsPerStudent, qList.size) else qList.size
+                                    SessionData(
+                                        title = s.activeSessionTitle.ifBlank { "Dars" },
+                                        questions = qList.shuffled().take(count),
+                                        slideTimerSeconds = s.slideTimerSeconds,
+                                        testTimerSeconds = s.testTimerSeconds,
+                                        mode = s.mode
+                                    )
+                                },
+                                onRecordReceived = { record ->
+                                    DatabaseHelper.saveExamRecord(record)
+                                }
+                            )
+                            currentScreen = Screen.TeacherIntro 
+                        },
                         onBack = { currentScreen = Screen.RoleSelection }
                     )
                     is Screen.TeacherIntro -> TeacherIntroScreen(
@@ -112,8 +157,37 @@ fun App() {
                     )
                     is Screen.TeacherHome -> TeacherHomeScreen(
                         onNavigateToLessons = { currentScreen = Screen.LessonSelection },
+                        onNavigateToExam = { currentScreen = Screen.ExamSelection },
                         onNavigateToHistory = { currentScreen = Screen.History },
                         onBack = { currentScreen = Screen.RoleSelection }
+                    )
+                    is Screen.ExamSelection -> ExamSelectionScreen(
+                        onExamSelected = { exam ->
+                            DatabaseHelper.saveSettings(
+                                presentationPath = "",
+                                testPath = exam.testPath,
+                                slideTimerMin = 0,
+                                testTimerMin = exam.testTimerSeconds / 60,
+                                mode = LessonMode.TestOnly,
+                                sessionTitle = exam.title,
+                                qCount = exam.questionsPerStudent
+                            )
+                            currentLessonTitle = exam.title
+                            currentSessionMode = LessonMode.TestOnly
+                            currentScreen = Screen.TeacherHome
+                        },
+                        onAddNewExam = { currentScreen = Screen.ExamSettings },
+                        onEditExam = { exam -> currentScreen = Screen.EditExam(exam) },
+                        onBack = { currentScreen = Screen.TeacherHome }
+                    )
+                    is Screen.ExamSettings -> ExamSettingsScreen(
+                        onSaveComplete = { currentScreen = Screen.ExamSelection },
+                        onBack = { currentScreen = Screen.ExamSelection }
+                    )
+                    is Screen.EditExam -> ExamSettingsScreen(
+                        examToEdit = screen.exam,
+                        onSaveComplete = { currentScreen = Screen.ExamSelection },
+                        onBack = { currentScreen = Screen.ExamSelection }
                     )
                     is Screen.Readme -> ReadmeScreen(
                         onNext = { currentScreen = Screen.TeacherHome },
@@ -126,11 +200,13 @@ fun App() {
                                 lesson.testPath,
                                 lesson.slideTimerSeconds / 60,
                                 lesson.testTimerSeconds / 60,
-                                lesson.mode
+                                lesson.mode,
+                                lesson.title,
+                                0 // All questions
                             )
                             currentLessonTitle = lesson.title
                             currentSessionMode = lesson.mode
-                            currentScreen = Screen.RoleSelection
+                            currentScreen = Screen.TeacherHome
                         },
                         onAddNewLesson = {
                             currentScreen = Screen.Settings
@@ -147,26 +223,55 @@ fun App() {
                     )
                     is Screen.StudentIntro -> {
                         if (isLoading) {
-                            val settings = remember { DatabaseHelper.getSettings() }
-                            LaunchedEffect(settings.presentationPath, settings.testPath) {
-                                slideTimer = settings.slideTimerSeconds
-                                testTimer = settings.testTimerSeconds
-                                currentSessionMode = settings.mode
-                                withContext(Dispatchers.IO) {
-                                    if (currentSessionMode == LessonMode.ReAppropriation) {
-                                        slides = PptConverter.convertSlidesToImages(settings.presentationPath)
-                                    } else {
-                                        slides = emptyList()
+                            LaunchedEffect(isLoading, isNetworkMode) {
+                                if (isNetworkMode) {
+                                    withContext(Dispatchers.IO) {
+                                        val session = NetworkManager.fetchSession(serverIp)
+                                        if (session != null) {
+                                            currentLessonTitle = session.title
+                                            questions = session.questions
+                                            slideTimer = session.slideTimerSeconds
+                                            testTimer = session.testTimerSeconds
+                                            currentSessionMode = session.mode
+                                            if (currentSessionMode == LessonMode.ReAppropriation) {
+                                                // Note: Files aren't shared via network yet, but metadata is.
+                                                // For a full fix, we'd need to serve files or assume they are shared.
+                                                // Keeping it as is for now.
+                                            } else {
+                                                slides = emptyList()
+                                            }
+                                        }
                                     }
-                                    val rawQuestions = TestParser.parseTest(settings.testPath)
-                                    questions = rawQuestions.map { q ->
-                                        val indexedOptions = q.options.withIndex().shuffled()
-                                        val newCorrectIndex = indexedOptions.indexOfFirst { it.index == q.correctIndex }
-                                        q.copy(
-                                            options = indexedOptions.map { it.value },
-                                            correctIndex = newCorrectIndex
-                                        )
-                                    }.shuffled()
+                                } else {
+                                    val settings = DatabaseHelper.getSettings()
+                                    slideTimer = settings.slideTimerSeconds
+                                    testTimer = settings.testTimerSeconds
+                                    currentSessionMode = settings.mode
+                                    currentLessonTitle = settings.activeSessionTitle.ifBlank { "Tezkor sessiya" }
+                                    withContext(Dispatchers.IO) {
+                                        if (currentSessionMode == LessonMode.ReAppropriation) {
+                                            slides = PptConverter.convertSlidesToImages(settings.presentationPath)
+                                        } else {
+                                            slides = emptyList()
+                                        }
+                                        val result = TestParser.parseTest(settings.testPath)
+                                        val rawQuestions = result.questions
+                                        val shuffled = rawQuestions.shuffled()
+                                        val count = if (settings.questionsPerStudent > 0) {
+                                            minOf(settings.questionsPerStudent, shuffled.size)
+                                        } else {
+                                            shuffled.size
+                                        }
+                                        
+                                        questions = shuffled.take(count).map { q ->
+                                            val indexedOptions = q.options.withIndex().shuffled()
+                                            val newCorrectIndex = indexedOptions.indexOfFirst { it.index == q.correctIndex }
+                                            q.copy(
+                                                options = indexedOptions.map { it.value },
+                                                correctIndex = newCorrectIndex
+                                            )
+                                        }
+                                    }
                                 }
                                 isLoading = false
                             }
@@ -178,7 +283,7 @@ fun App() {
                                 }
                             }
                         } else {
-                            var showNameDialog by remember { mutableStateOf(true) }
+                            var showNameDialog by remember { mutableStateOf(studentName.isEmpty()) }
                             if (showNameDialog) {
                                 NameInputDialog(
                                     onNameEntered = { name ->
@@ -192,6 +297,7 @@ fun App() {
                             }
                             
                             StudentIntroScreen(
+                                title = currentLessonTitle,
                                 totalSlides = slides.size,
                                 totalQuestions = questions.size,
                                 slideTimerSeconds = slideTimer,
@@ -203,6 +309,9 @@ fun App() {
                                     } else {
                                         currentScreen = Screen.Test
                                     }
+                                },
+                                onRefresh = {
+                                    isLoading = true
                                 },
                                 onBack = {
                                     currentScreen = Screen.RoleSelection
@@ -233,6 +342,7 @@ fun App() {
                     }
                     is Screen.Test -> {
                         TestScreen(
+                            sessionTitle = currentLessonTitle,
                             questions = questions,
                             testTimerSeconds = testTimer,
                             studentName = studentName,
@@ -257,6 +367,21 @@ fun App() {
                                     timeSpentSeconds = spent,
                                     timestamp = System.currentTimeMillis()
                                 ))
+
+                                if (isNetworkMode) {
+                                    Thread {
+                                        NetworkManager.submitResult(serverIp, record = ExamRecord(
+                                            studentName = if (studentName.isBlank()) "Anonim" else studentName,
+                                            lessonTitle = currentLessonTitle,
+                                            totalQuestions = questions.size,
+                                            correctAnswers = correctCount,
+                                            wrongAnswers = questions.size - correctCount,
+                                            wrongDetails = wrongDetails,
+                                            timeSpentSeconds = spent,
+                                            timestamp = System.currentTimeMillis()
+                                        ))
+                                    }.start()
+                                }
                                 
                                 currentScreen = Screen.Result
                             },

@@ -6,5 +6,7 @@ data class Settings(
     val testPath: String,
     val slideTimerSeconds: Int,
     val testTimerSeconds: Int,
-    val mode: LessonMode = LessonMode.ReAppropriation
+    val mode: LessonMode = LessonMode.ReAppropriation,
+    val activeSessionTitle: String = "",
+    val questionsPerStudent: Int = 0
 )

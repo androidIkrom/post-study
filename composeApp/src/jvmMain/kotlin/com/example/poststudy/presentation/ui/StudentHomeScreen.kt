@@ -30,18 +30,19 @@ fun StudentHomeScreen(
             .fillMaxSize()
             .background(AppDesign.BackgroundGradient)
     ) {
+        // Decorative background elements
         Box(
             modifier = Modifier
                 .size(600.dp)
                 .offset(x = (-200).dp, y = (-200).dp)
-                .background(Color.White.copy(alpha = 0.07f), CircleShape)
+                .background(Color(0xFF10B981).copy(alpha = 0.05f), CircleShape)
         )
         Box(
             modifier = Modifier
-                .size(400.dp)
+                .size(500.dp)
                 .align(Alignment.BottomEnd)
                 .offset(x = 150.dp, y = 150.dp)
-                .background(Color.White.copy(alpha = 0.05f), CircleShape)
+                .background(Color(0xFF3B82F6).copy(alpha = 0.05f), CircleShape)
         )
 
         Scaffold(
@@ -50,9 +51,9 @@ fun StudentHomeScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            "Talaba Paneli",
-                            color = Color.White,
-                            fontWeight = FontWeight.ExtraBold
+                            "Tinglovchi Paneli",
+                            color = Color(0xFF065F46),
+                            fontWeight = FontWeight.Black
                         )
                     },
                     navigationIcon = {
@@ -60,7 +61,7 @@ fun StudentHomeScreen(
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Orqaga",
-                                tint = Color.White
+                                tint = Color(0xFF065F46)
                             )
                         }
                     },
@@ -77,36 +78,37 @@ fun StudentHomeScreen(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Xush kelibsiz, Talaba",
+                    text = "Xush kelibsiz, Tinglovchi",
                     style = MaterialTheme.typography.displaySmall,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
+                    color = Color(0xFF1E293B),
+                    fontWeight = FontWeight.Black
                 )
                 Text(
-                    text = "Bugun nima bilan shug'ullanamiz?",
+                    text = "Bugun qaysi mavzuda bilimingizni boyitamiz?",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White.copy(alpha = 0.8f),
+                    color = Color(0xFF64748B),
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 64.dp)
                 )
 
                 Row(
-                    modifier = Modifier.fillMaxWidth().widthIn(max = 900.dp),
+                    modifier = Modifier.fillMaxWidth().widthIn(max = 1000.dp),
                     horizontalArrangement = Arrangement.spacedBy(32.dp)
                 ) {
                     StudentHomeCard(
                         modifier = Modifier.weight(1f),
-                        title = "Tayyorgarlik ko'rish",
-                        subtitle = "Darsliklarni taymerlarsiz o'rganish",
+                        title = "Tayyorgarlik",
+                        subtitle = "Darsliklarni o'rganish",
                         icon = Icons.AutoMirrored.Filled.MenuBook,
-                        color = Color(0xFFFACC15),
+                        color = Color(0xFFF59E0B), // Amber 500
                         onClick = onNavigateToPreparation
                     )
                     StudentHomeCard(
                         modifier = Modifier.weight(1f),
-                        title = "Test topshirish",
-                        subtitle = "Bilimingizni sinab ko'ring",
+                        title = "Bilim Testi",
+                        subtitle = "O'zingizni sinab ko'ring",
                         icon = Icons.AutoMirrored.Filled.Assignment,
-                        color = Color(0xFF4ADE80),
+                        color = Color(0xFF10B981), // Emerald 500
                         onClick = onNavigateToTest
                     )
                 }
@@ -127,36 +129,37 @@ fun StudentHomeCard(
     Surface(
         onClick = onClick,
         modifier = modifier
-            .height(200.dp)
-            .shadow(8.dp, AppDesign.ComponentShape),
+            .height(220.dp),
         shape = AppDesign.ComponentShape,
         color = Color.White,
-        border = androidx.compose.foundation.BorderStroke(2.dp, color.copy(alpha = 0.5f))
+        border = androidx.compose.foundation.BorderStroke(3.dp, color),
+        shadowElevation = 8.dp
     ) {
         Column(
-            modifier = Modifier.padding(24.dp),
+            modifier = Modifier.padding(32.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Box(
                 modifier = Modifier
-                    .size(56.dp)
-                    .background(color.copy(alpha = 0.2f), CircleShape),
+                    .size(64.dp)
+                    .background(color.copy(alpha = 0.15f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(28.dp))
+                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(32.dp))
             }
 
             Column {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.ExtraBold,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Black,
                     color = color
                 )
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF64748B)
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF64748B),
+                    fontWeight = FontWeight.Bold
                 )
             }
         }

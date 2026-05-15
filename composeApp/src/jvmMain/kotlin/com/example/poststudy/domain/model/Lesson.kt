@@ -14,3 +14,11 @@ data class Lesson(
     val testTimerSeconds: Int,
     val mode: LessonMode = LessonMode.ReAppropriation
 )
+
+data class Exam(
+    val id: Int = 0,
+    val title: String,
+    val testPath: String,
+    val testTimerSeconds: Int,
+    val questionsPerStudent: Int
+)

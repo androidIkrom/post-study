@@ -19,8 +19,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.poststudy.data.local.DatabaseHelper
+import com.example.poststudy.data.util.TestParser
 import com.example.poststudy.domain.model.*
 import com.example.poststudy.presentation.theme.AppDesign
+import com.example.poststudy.presentation.ui.components.PostStudyDialog
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerMode
 import io.github.vinceglb.filekit.core.PickerType
@@ -38,6 +40,7 @@ fun SettingsScreen(
     var title by remember { mutableStateOf(lessonToEdit?.title ?: "") }
     var presentationPath by remember { mutableStateOf(lessonToEdit?.presentationPath ?: initialSettings.presentationPath) }
     var testPath by remember { mutableStateOf(lessonToEdit?.testPath ?: initialSettings.testPath) }
+    var testWarnings by remember { mutableStateOf<List<String>>(emptyList()) }
     
     var slideTimerMin by remember { mutableStateOf(( (lessonToEdit?.slideTimerSeconds ?: initialSettings.slideTimerSeconds) / 60 ).toString()) }
     var testTimerMin by remember { mutableStateOf(( (lessonToEdit?.testTimerSeconds ?: initialSettings.testTimerSeconds) / 60 ).toString()) }
@@ -56,7 +59,11 @@ fun SettingsScreen(
         type = PickerType.File(extensions = listOf("doc", "docx")),
         mode = PickerMode.Single
     ) { file: PlatformFile? ->
-        file?.path?.let { testPath = it }
+        file?.path?.let { 
+            testPath = it 
+            val result = TestParser.parseTest(it)
+            testWarnings = result.warnings
+        }
     }
 
     val slideTimerVal = slideTimerMin.toIntOrNull() ?: 0
@@ -85,7 +92,7 @@ fun SettingsScreen(
             DatabaseHelper.updateLesson(lesson)
         }
         
-        DatabaseHelper.saveSettings(presentationPath, testPath, slideTimerVal, testTimerVal, selectedMode)
+        DatabaseHelper.saveSettings(presentationPath, testPath, slideTimerVal, testTimerVal, selectedMode, title, 0)
         onSaveComplete()
     }
 
@@ -104,10 +111,10 @@ fun SettingsScreen(
             },
             topBar = {
                 CenterAlignedTopAppBar(
-                    title = { Text(if (lessonToEdit == null) "Yangi dars" else "Darsni tahrirlash", fontWeight = FontWeight.ExtraBold, color = Color.White) },
+                    title = { Text(if (lessonToEdit == null) "Yangi dars" else "Darsni tahrirlash", fontWeight = FontWeight.Black, color = Color(0xFF1E293B)) },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Orqaga", tint = Color.White)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Orqaga", tint = Color(0xFF1E293B))
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -126,13 +133,13 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Card(
-                    modifier = Modifier.fillMaxWidth().widthIn(max = 900.dp),
+                    modifier = Modifier.fillMaxWidth().widthIn(max = 1000.dp),
                     shape = AppDesign.CardShape,
-                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                    border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF4F46E5).copy(alpha = 0.2f))
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
+                    border = androidx.compose.foundation.BorderStroke(3.dp, Color(0xFF10B981).copy(alpha = 0.3f))
                 ) {
-                    Column(modifier = Modifier.padding(40.dp), verticalArrangement = Arrangement.spacedBy(32.dp)) {
+                    Column(modifier = Modifier.padding(56.dp), verticalArrangement = Arrangement.spacedBy(32.dp)) {
                         SettingsSection(title = "Dars nomi") {
                             OutlinedTextField(
                                 value = title,
@@ -142,8 +149,8 @@ fun SettingsScreen(
                                 shape = AppDesign.ComponentShape,
                                 singleLine = true,
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFF4F46E5),
-                                    focusedLabelColor = Color(0xFF4F46E5)
+                                    focusedBorderColor = Color(0xFF6366F1),
+                                    focusedLabelColor = Color(0xFF6366F1)
                                 )
                             )
                         }
@@ -151,7 +158,7 @@ fun SettingsScreen(
                         SettingsSection(title = "Sessiya rejimi") {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                horizontalArrangement = Arrangement.spacedBy(24.dp)
                             ) {
                                 ModeCard(
                                     modifier = Modifier.weight(1f),
@@ -174,7 +181,7 @@ fun SettingsScreen(
                             SettingsSection(title = "Prezentatsiya fayli") {
                                 FilePickerRow(
                                     path = presentationPath,
-                                    label = "PowerPoint fayli",
+                                    label = "PowerPoint fayli (.ppt, .pptx)",
                                     onSelect = { presentationLauncher.launch() }
                                 )
                             }
@@ -183,15 +190,32 @@ fun SettingsScreen(
                         SettingsSection(title = "Test fayli") {
                             FilePickerRow(
                                 path = testPath,
-                                label = "Word hujjati",
+                                label = "Word hujjati (.doc, .docx)",
                                 onSelect = { testLauncher.launch() }
                             )
+
+                            if (testWarnings.isNotEmpty()) {
+                                Spacer(Modifier.height(8.dp))
+                                Surface(
+                                    color = Color(0xFFFFF7ED),
+                                    shape = AppDesign.ComponentShape,
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF97316).copy(alpha = 0.3f)),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column(modifier = Modifier.padding(12.dp)) {
+                                        Text("Ogohlantirishlar:", fontWeight = FontWeight.Bold, color = Color(0xFFC2410C), style = MaterialTheme.typography.labelMedium)
+                                        testWarnings.forEach { warning ->
+                                            Text("• $warning", style = MaterialTheme.typography.labelSmall, color = Color(0xFF9A3412))
+                                        }
+                                    }
+                                }
+                            }
                         }
 
                         SettingsSection(title = "Taymerlar (kamida 5 daqiqa)") {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                horizontalArrangement = Arrangement.spacedBy(24.dp)
                             ) {
                                 if (selectedMode == LessonMode.ReAppropriation) {
                                     OutlinedTextField(
@@ -204,8 +228,8 @@ fun SettingsScreen(
                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                         singleLine = true,
                                         colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = Color(0xFF4F46E5),
-                                            focusedLabelColor = Color(0xFF4F46E5)
+                                            focusedBorderColor = Color(0xFF6366F1),
+                                            focusedLabelColor = Color(0xFF6366F1)
                                         )
                                     )
                                 }
@@ -220,8 +244,8 @@ fun SettingsScreen(
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     singleLine = true,
                                     colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = Color(0xFF4F46E5),
-                                        focusedLabelColor = Color(0xFF4F46E5)
+                                        focusedBorderColor = Color(0xFF6366F1),
+                                        focusedLabelColor = Color(0xFF6366F1)
                                     )
                                 )
                             }
@@ -232,37 +256,29 @@ fun SettingsScreen(
                 Button(
                     onClick = { saveSettings() },
                     enabled = isReady,
-                    modifier = Modifier.width(360.dp).height(68.dp).padding(bottom = 32.dp),
+                    modifier = Modifier.width(400.dp).height(72.dp).padding(bottom = 32.dp),
                     shape = AppDesign.ComponentShape,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFF4F46E5)),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1), contentColor = Color.White),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 12.dp)
                 ) {
-                    Text("DARSNI SAQLASH", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold)
+                    Text("DARSNI SAQLASH", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
                 }
             }
         }
     }
 
     if (showSaveDialog) {
-        AlertDialog(
+        PostStudyDialog(
             onDismissRequest = { showSaveDialog = false },
-            title = { Text("Sozlamalarni saqlash") },
-            text = { Text("Ushbu o'zgarishlarni saqlab, darslar ro'yxatiga qaytishni xohlaysizmi?") },
-            confirmButton = {
-                TextButton(onClick = { 
-                    showSaveDialog = false
-                    saveSettings()
-                }) {
-                    Text("Ha, Saqlash", color = Color(0xFF4F46E5), fontWeight = FontWeight.ExtraBold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showSaveDialog = false }) {
-                    Text("Bekor qilish", color = Color(0xFF64748B), fontWeight = FontWeight.Bold)
-                }
-            },
-            shape = AppDesign.CardShape,
-            containerColor = Color.White
+            title = "Sozlamalarni saqlash",
+            text = "Ushbu o'zgarishlarni saqlab, darslar ro'yxatiga qaytishni xohlaysizmi?",
+            confirmText = "Ha, Saqlash",
+            dismissText = "Bekor qilish",
+            confirmColor = Color(0xFF6366F1), // Indigo to match settings theme
+            onConfirm = { 
+                showSaveDialog = false
+                saveSettings()
+            }
         )
     }
 }
@@ -277,19 +293,19 @@ fun ModeCard(
 ) {
     Surface(
         onClick = onClick,
-        modifier = modifier.height(110.dp),
+        modifier = modifier.height(120.dp),
         shape = AppDesign.ComponentShape,
         color = if (isSelected) Color(0xFFEEF2FF) else Color(0xFFF8FAFC),
-        border = if (isSelected) androidx.compose.foundation.BorderStroke(3.dp, Color(0xFF4F46E5)) else androidx.compose.foundation.BorderStroke(2.dp, Color(0xFFE2E8F0)),
-        shadowElevation = if (isSelected) 4.dp else 0.dp
+        border = if (isSelected) androidx.compose.foundation.BorderStroke(4.dp, Color(0xFF6366F1)) else androidx.compose.foundation.BorderStroke(2.dp, Color(0xFFE2E8F0)),
+        shadowElevation = if (isSelected) 8.dp else 0.dp
     ) {
         Column(
             modifier = Modifier.fillMaxSize().padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(text = title, fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleMedium, color = if (isSelected) Color(0xFF4F46E5) else Color(0xFF1E293B))
-            Text(text = description, style = MaterialTheme.typography.bodySmall, color = if (isSelected) Color(0xFF6366F1) else Color(0xFF64748B))
+            Text(text = title, fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleLarge, color = if (isSelected) Color(0xFF6366F1) else Color(0xFF1E293B))
+            Text(text = description, style = MaterialTheme.typography.bodyMedium, color = if (isSelected) Color(0xFF6366F1) else Color(0xFF64748B), fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -299,8 +315,8 @@ fun SettingsSection(title: String, content: @Composable () -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = title,
-            style = MaterialTheme.typography.titleSmall,
-            color = Color(0xFF4F46E5),
+            style = MaterialTheme.typography.titleLarge,
+            color = Color(0xFF6366F1), // Indigo header
             fontWeight = FontWeight.Black,
             modifier = Modifier.padding(start = 4.dp, bottom = 12.dp)
         )
@@ -322,7 +338,7 @@ fun FilePickerRow(path: String, label: String, onSelect: () -> Unit) {
             readOnly = true,
             shape = AppDesign.ComponentShape,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF4F46E5),
+                focusedBorderColor = Color(0xFF6366F1),
                 unfocusedBorderColor = Color(0xFFE2E8F0)
             )
         )
@@ -330,11 +346,11 @@ fun FilePickerRow(path: String, label: String, onSelect: () -> Unit) {
         Button(
             onClick = onSelect,
             shape = AppDesign.ComponentShape,
-            modifier = Modifier.height(56.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF1F5F9), contentColor = Color(0xFF1E293B)),
-            border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFFE2E8F0))
+            modifier = Modifier.height(64.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981), contentColor = Color.White), // Emerald Action
+            elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
         ) {
-            Text("Tanlash", fontWeight = FontWeight.ExtraBold)
+            Text("TANLASH", fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium)
         }
     }
 }

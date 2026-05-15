@@ -16,13 +16,15 @@ object Users : Table("users_v2") {
     override val primaryKey = PrimaryKey(id)
 }
 
-object SettingsTable : Table("settings_v2") {
+object SettingsTable : Table("settings_v4") {
     val id = integer("id").autoIncrement()
     val presentationPath = text("presentation_path")
     val testPath = text("test_path")
-    val slideTimerMinutes = integer("slide_timer_minutes") // Changed to minutes
-    val testTimerMinutes = integer("test_timer_minutes")   // Changed to minutes
+    val slideTimerMinutes = integer("slide_timer_minutes")
+    val testTimerMinutes = integer("test_timer_minutes")
     val mode = enumerationByName("mode", 20, LessonMode::class).default(LessonMode.ReAppropriation)
+    val activeSessionTitle = varchar("active_session_title", 255).default("")
+    val questionsPerStudent = integer("questions_per_student").default(0)
 
     override val primaryKey = PrimaryKey(id)
 }
@@ -35,6 +37,16 @@ object LessonsTable : Table("lessons_v2") {
     val slideTimerMinutes = integer("slide_timer_minutes") // Changed to minutes
     val testTimerMinutes = integer("test_timer_minutes")   // Changed to minutes
     val mode = enumerationByName("mode", 20, LessonMode::class).default(LessonMode.ReAppropriation)
+
+    override val primaryKey = PrimaryKey(id)
+}
+
+object ExamsTable : Table("exams_v1") {
+    val id = integer("id").autoIncrement()
+    val title = varchar("title", 255)
+    val testPath = text("test_path")
+    val testTimerMinutes = integer("test_timer_minutes")
+    val questionsPerStudent = integer("questions_per_student")
 
     override val primaryKey = PrimaryKey(id)
 }
@@ -63,7 +75,7 @@ object DatabaseHelper {
         
         Database.connect("jdbc:sqlite:$dbPath", "org.sqlite.JDBC")
         transaction {
-            SchemaUtils.create(Users, SettingsTable, LessonsTable, ExamRecordsTable)
+            SchemaUtils.create(Users, SettingsTable, LessonsTable, ExamsTable, ExamRecordsTable)
             
             if (SettingsTable.selectAll().count() == 0L) {
                 SettingsTable.insert {
@@ -72,6 +84,8 @@ object DatabaseHelper {
                     it[SettingsTable.slideTimerMinutes] = 5
                     it[SettingsTable.testTimerMinutes] = 30
                     it[SettingsTable.mode] = LessonMode.ReAppropriation
+                    it[SettingsTable.activeSessionTitle] = ""
+                    it[SettingsTable.questionsPerStudent] = 0
                 }
             }
         }
@@ -102,7 +116,11 @@ object DatabaseHelper {
             .count() > 0
     }
 
-    fun saveSettings(presentationPath: String, testPath: String, slideTimerMin: Int, testTimerMin: Int, mode: LessonMode) {
+    fun clearAllUsers() = transaction {
+        Users.deleteAll()
+    }
+
+    fun saveSettings(presentationPath: String, testPath: String, slideTimerMin: Int, testTimerMin: Int, mode: LessonMode, sessionTitle: String? = null, qCount: Int = 0) {
         transaction {
             SettingsTable.update({ SettingsTable.id eq 1 }) {
                 it[SettingsTable.presentationPath] = presentationPath
@@ -110,6 +128,10 @@ object DatabaseHelper {
                 it[SettingsTable.slideTimerMinutes] = slideTimerMin
                 it[SettingsTable.testTimerMinutes] = testTimerMin
                 it[SettingsTable.mode] = mode
+                if (sessionTitle != null) {
+                    it[SettingsTable.activeSessionTitle] = sessionTitle
+                }
+                it[SettingsTable.questionsPerStudent] = qCount
             }
         }
     }
@@ -120,11 +142,13 @@ object DatabaseHelper {
                 id = row[SettingsTable.id],
                 presentationPath = row[SettingsTable.presentationPath],
                 testPath = row[SettingsTable.testPath],
-                slideTimerSeconds = row[SettingsTable.slideTimerMinutes] * 60, // Keep domain in seconds if needed, but here we treat it as minutes in UI
+                slideTimerSeconds = row[SettingsTable.slideTimerMinutes] * 60,
                 testTimerSeconds = row[SettingsTable.testTimerMinutes] * 60,
-                mode = row[SettingsTable.mode]
+                mode = row[SettingsTable.mode],
+                activeSessionTitle = row[SettingsTable.activeSessionTitle],
+                questionsPerStudent = row[SettingsTable.questionsPerStudent]
             )
-        }.firstOrNull() ?: Settings(1, "", "", 300, 1800, LessonMode.ReAppropriation)
+        }.firstOrNull() ?: Settings(1, "", "", 300, 1800, LessonMode.ReAppropriation, "", 0)
     }
 
     fun getAllLessons(): List<Lesson> = transaction {
@@ -170,6 +194,46 @@ object DatabaseHelper {
     fun deleteLesson(lessonId: Int) {
         transaction {
             LessonsTable.deleteWhere { id eq lessonId }
+        }
+    }
+
+    fun getAllExams(): List<Exam> = transaction {
+        ExamsTable.selectAll().map { row ->
+            Exam(
+                id = row[ExamsTable.id],
+                title = row[ExamsTable.title],
+                testPath = row[ExamsTable.testPath],
+                testTimerSeconds = row[ExamsTable.testTimerMinutes] * 60,
+                questionsPerStudent = row[ExamsTable.questionsPerStudent]
+            )
+        }
+    }
+
+    fun addExam(exam: Exam) {
+        transaction {
+            ExamsTable.insert {
+                it[title] = exam.title
+                it[testPath] = exam.testPath
+                it[testTimerMinutes] = exam.testTimerSeconds / 60
+                it[questionsPerStudent] = exam.questionsPerStudent
+            }
+        }
+    }
+
+    fun updateExam(exam: Exam) {
+        transaction {
+            ExamsTable.update({ ExamsTable.id eq exam.id }) {
+                it[title] = exam.title
+                it[testPath] = exam.testPath
+                it[testTimerMinutes] = exam.testTimerSeconds / 60
+                it[questionsPerStudent] = exam.questionsPerStudent
+            }
+        }
+    }
+
+    fun deleteExam(examId: Int) {
+        transaction {
+            ExamsTable.deleteWhere { id eq examId }
         }
     }
 

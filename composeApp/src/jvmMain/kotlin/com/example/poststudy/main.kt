@@ -23,6 +23,7 @@ import org.jetbrains.compose.resources.painterResource
 import poststudy.composeapp.generated.resources.Res
 import poststudy.composeapp.generated.resources.icon
 import com.example.poststudy.data.local.DatabaseHelper
+import com.example.poststudy.data.network.NetworkManager
 import com.example.poststudy.presentation.App
 
 fun main() = application {
@@ -30,7 +31,10 @@ fun main() = application {
     val windowState = rememberWindowState(placement = WindowPlacement.Maximized)
     
     Window(
-        onCloseRequest = ::exitApplication,
+        onCloseRequest = {
+            NetworkManager.stopServer()
+            exitApplication()
+        },
         title = "PostStudy",
         state = windowState,
         undecorated = true, // This makes the window match our UI perfectly
@@ -40,8 +44,8 @@ fun main() = application {
             // Custom Title Bar
             val backgroundGradient = Brush.horizontalGradient(
                 colors = listOf(
-                    Color(0xFF0F172A),
-                    Color(0xFF1E293B)
+                    Color(0xFF064E3B), // Darker Emerald
+                    Color(0xFF10B981)  // Emerald 500
                 )
             )
             
@@ -61,8 +65,8 @@ fun main() = application {
                         Text(
                             text = "PostStudy",
                             style = MaterialTheme.typography.labelLarge,
-                            color = Color.White.copy(alpha = 0.7f),
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                            color = Color.White,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Black
                         )
                         
                         Row(verticalAlignment = Alignment.CenterVertically) {

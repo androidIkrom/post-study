@@ -28,6 +28,7 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TestScreen(
+    sessionTitle: String,
     questions: List<Question>,
     testTimerSeconds: Int,
     studentName: String,
@@ -112,29 +113,30 @@ fun TestScreen(
                 TopAppBar(
                     title = { 
                         Column {
-                            Text("Test mashg'uloti", fontWeight = FontWeight.ExtraBold, color = Color.White)
-                            Text(studentName, style = MaterialTheme.typography.labelMedium, color = Color.White.copy(alpha = 0.7f))
+                            Text(sessionTitle, fontWeight = FontWeight.Black, color = Color(0xFF1E293B))
+                            Text(studentName, style = MaterialTheme.typography.labelLarge, color = Color(0xFF64748B), fontWeight = FontWeight.Bold)
                         }
                     },
                     navigationIcon = {
                         IconButton(onClick = { showBackDialog = true }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Orqaga", tint = Color.White)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Orqaga", tint = Color(0xFF1E293B))
                         }
                     },
                     actions = {
                         Surface(
-                            color = Color(0xFFEF4444),
+                            color = Color(0xFFEF4444), // Urgent Red
                             shape = AppDesign.ComponentShape,
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.3f)),
-                            modifier = Modifier.padding(end = 16.dp)
+                            border = androidx.compose.foundation.BorderStroke(2.dp, Color.White.copy(alpha = 0.5f)),
+                            modifier = Modifier.padding(end = 16.dp),
+                            shadowElevation = 8.dp
                         ) {
                             val minutes = timeLeftSeconds / 60
                             val seconds = timeLeftSeconds % 60
                             Text(
                                 text = "%d:%02d".format(minutes, seconds),
-                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.ExtraBold,
+                                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Black,
                                 color = Color.White
                             )
                         }
@@ -145,7 +147,7 @@ fun TestScreen(
         ) { paddingValues ->
             if (questions.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Test faylida savollar topilmadi.", color = Color.White)
+                    Text("Test faylida savollar topilmadi.", color = Color(0xFF1E293B))
                 }
                 return@Scaffold
             }
@@ -165,37 +167,37 @@ fun TestScreen(
                     modifier = Modifier
                         .fillMaxWidth(0.8f)
                         .padding(bottom = 32.dp)
-                        .height(12.dp)
+                        .height(16.dp)
                         .clip(CircleShape),
-                    color = Color.White,
-                    trackColor = Color.White.copy(alpha = 0.2f)
+                    color = Color(0xFF10B981), // Emerald Progress
+                    trackColor = Color(0xFF10B981).copy(alpha = 0.1f)
                 )
 
                 Card(
-                    modifier = Modifier.fillMaxWidth().widthIn(max = 850.dp),
+                    modifier = Modifier.fillMaxWidth().widthIn(max = 900.dp),
                     shape = AppDesign.CardShape,
-                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                    border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF4F46E5).copy(alpha = 0.2f))
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
+                    border = androidx.compose.foundation.BorderStroke(3.dp, Color(0xFF6366F1).copy(alpha = 0.4f)) // Indigo border
                 ) {
-                    Column(modifier = Modifier.padding(48.dp)) {
+                    Column(modifier = Modifier.padding(56.dp)) {
                         Text(
                             text = "${currentQuestionIndex + 1} / ${questions.size}-savol",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color(0xFF4F46E5),
-                            fontWeight = FontWeight.ExtraBold
+                            style = MaterialTheme.typography.titleLarge,
+                            color = Color(0xFF6366F1),
+                            fontWeight = FontWeight.Black
                         )
                         
-                        Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
                         
                         Text(
                             text = currentQuestion.text,
-                            style = MaterialTheme.typography.headlineSmall,
+                            style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Black,
                             color = Color(0xFF1E293B)
                         )
 
-                        Spacer(modifier = Modifier.height(40.dp))
+                        Spacer(modifier = Modifier.height(48.dp))
 
                         currentQuestion.options.forEachIndexed { index, option ->
                             val isCorrectHint = showCheatHint && index == currentQuestion.correctIndex
@@ -211,40 +213,40 @@ fun TestScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(48.dp))
+                Spacer(modifier = Modifier.height(56.dp))
 
                 Row(
-                    modifier = Modifier.fillMaxWidth().widthIn(max = 850.dp),
+                    modifier = Modifier.fillMaxWidth().widthIn(max = 900.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedButton(
                         onClick = { if (currentQuestionIndex > 0) currentQuestionIndex-- },
                         enabled = currentQuestionIndex > 0,
-                        modifier = Modifier.height(64.dp).width(200.dp),
+                        modifier = Modifier.height(68.dp).width(220.dp),
                         shape = AppDesign.ComponentShape,
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                        border = androidx.compose.foundation.BorderStroke(2.dp, Color.White.copy(alpha = 0.5f))
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF10B981)),
+                        border = androidx.compose.foundation.BorderStroke(3.dp, Color(0xFF10B981))
                     ) {
-                        Text("Oldingi", fontWeight = FontWeight.ExtraBold)
+                        Text("OLDINGI", fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium)
                     }
 
                     Button(
                         onClick = handleNextSubmit,
-                        modifier = Modifier.height(64.dp).width(200.dp),
+                        modifier = Modifier.height(68.dp).width(220.dp),
                         shape = AppDesign.ComponentShape,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFF4F46E5)),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1), contentColor = Color.White),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
                     ) {
                         Text(
-                            text = if (currentQuestionIndex < questions.size - 1) "Keyingisi" else "Yakunlash",
+                            text = if (currentQuestionIndex < questions.size - 1) "KEYINGISI" else "YAKUNLASH",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Black
                         )
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(48.dp))
             }
         }
     }
@@ -281,7 +283,7 @@ fun TestScreen(
 fun OptionCard(text: String, isSelected: Boolean, isHint: Boolean = false, onClick: () -> Unit) {
     val borderColor = when {
         isHint -> Color(0xFF10B981)
-        isSelected -> Color(0xFF4F46E5)
+        isSelected -> Color(0xFF6366F1)
         else -> Color(0xFFE2E8F0)
     }
     
@@ -295,7 +297,7 @@ fun OptionCard(text: String, isSelected: Boolean, isHint: Boolean = false, onCli
         modifier = Modifier.fillMaxWidth().clickable { onClick() },
         shape = AppDesign.ComponentShape,
         color = backgroundColor,
-        border = androidx.compose.foundation.BorderStroke(2.dp, borderColor)
+        border = androidx.compose.foundation.BorderStroke(3.dp, borderColor)
     ) {
         Row(
             modifier = Modifier.padding(24.dp),
@@ -305,7 +307,7 @@ fun OptionCard(text: String, isSelected: Boolean, isHint: Boolean = false, onCli
                 selected = isSelected,
                 onClick = onClick,
                 colors = RadioButtonDefaults.colors(
-                    selectedColor = if (isHint) Color(0xFF10B981) else Color(0xFF4F46E5),
+                    selectedColor = if (isHint) Color(0xFF10B981) else Color(0xFF6366F1),
                     unselectedColor = Color(0xFF94A3B8)
                 )
             )
@@ -313,10 +315,10 @@ fun OptionCard(text: String, isSelected: Boolean, isHint: Boolean = false, onCli
                 text = text,
                 modifier = Modifier.padding(start = 16.dp),
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Bold,
+                fontWeight = if (isSelected) FontWeight.Black else FontWeight.Bold,
                 color = when {
                     isHint -> Color(0xFF065F46)
-                    isSelected -> Color(0xFF4F46E5)
+                    isSelected -> Color(0xFF6366F1)
                     else -> Color(0xFF475569)
                 }
             )

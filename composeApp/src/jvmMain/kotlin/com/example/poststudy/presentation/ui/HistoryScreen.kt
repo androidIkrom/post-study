@@ -48,7 +48,7 @@ fun HistoryScreen(onBack: () -> Unit) {
         PostStudyDialog(
             onDismissRequest = { recordToDelete = null },
             title = "Yozuvni o'chirish",
-            text = "Haqiqatan ham '${recordToDelete?.studentName}' talabasining ushbu imtihon yozuvini o'chirib tashlamoqchimisiz?",
+            text = "Haqiqatan ham '${recordToDelete?.studentName}' tinglovchisining ushbu imtihon yozuvini o'chirib tashlamoqchimisiz?",
             confirmText = "O'chirish",
             confirmColor = Color(0xFFEF4444),
             onConfirm = {
@@ -70,16 +70,16 @@ fun HistoryScreen(onBack: () -> Unit) {
             containerColor = Color.Transparent,
             topBar = {
                 TopAppBar(
-                    title = { Text("Imtihon Tahlili", fontWeight = FontWeight.ExtraBold, color = Color.White) },
+                    title = { Text("Imtihon Tahlili", fontWeight = FontWeight.Black, color = Color(0xFF065F46)) },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Orqaga", tint = Color.White)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Orqaga", tint = Color(0xFF065F46))
                         }
                     },
                     actions = {
                         if (records.isNotEmpty()) {
                             IconButton(onClick = { showClearAllDialog = true }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Hammasini tozalash", tint = Color.White)
+                                Icon(Icons.Default.Delete, contentDescription = "Hammasini tozalash", tint = Color(0xFF065F46))
                             }
                         }
                     },
@@ -89,7 +89,7 @@ fun HistoryScreen(onBack: () -> Unit) {
         ) { paddingValues ->
             if (records.isEmpty()) {
                 Box(Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
-                    Text("Imtihon tarixi topilmadi.", style = MaterialTheme.typography.bodyLarge, color = Color.White.copy(alpha = 0.6f))
+                    Text("Imtihon tarixi topilmadi.", style = MaterialTheme.typography.bodyLarge, color = Color(0xFF64748B))
                 }
             } else {
                 LazyColumn(

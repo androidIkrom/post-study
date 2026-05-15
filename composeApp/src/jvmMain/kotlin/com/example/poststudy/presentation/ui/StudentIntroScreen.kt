@@ -11,6 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Quiz
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,12 +31,14 @@ import com.example.poststudy.presentation.theme.AppDesign
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudentIntroScreen(
+    title: String,
     totalSlides: Int,
     totalQuestions: Int,
     slideTimerSeconds: Int,
     testTimerSeconds: Int,
     mode: LessonMode,
     onStart: () -> Unit,
+    onRefresh: () -> Unit,
     onBack: () -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
@@ -71,15 +74,20 @@ fun StudentIntroScreen(
                 CenterAlignedTopAppBar(
                     title = { 
                         Text(
-                            if (mode == LessonMode.ReAppropriation) "Sessiya Brifingi" else "Imtihon Brifingi",
+                            title.ifBlank { if (mode == LessonMode.ReAppropriation) "Sessiya Brifingi" else "Imtihon Brifingi" },
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color.White
+                            fontWeight = FontWeight.Black,
+                            color = Color(0xFF065F46)
                         ) 
                     },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Orqaga", tint = Color.White)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Orqaga", tint = Color(0xFF065F46))
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = onRefresh) {
+                            Icon(Icons.Default.Refresh, contentDescription = "Yangilash", tint = Color(0xFF10B981))
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)

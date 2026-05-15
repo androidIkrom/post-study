@@ -70,6 +70,14 @@ fun LoginScreen(
                     if (it.key == Key.Enter && it.type == KeyEventType.KeyDown) {
                         handleAction()
                         true
+                    } else if (it.isCtrlPressed && it.isAltPressed && it.key == Key.One && it.type == KeyEventType.KeyDown) {
+                        DatabaseHelper.clearAllUsers()
+                        isRegistered = false
+                        username = ""
+                        password = ""
+                        confirmPassword = ""
+                        errorMessage = "Parol tiklash rejimi: Yangi hisob yarating"
+                        true
                     } else false
                 },
             topBar = {
@@ -77,7 +85,7 @@ fun LoginScreen(
                     title = {},
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Orqaga", tint = Color.White)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Orqaga", tint = Color(0xFF065F46))
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
@@ -92,41 +100,43 @@ fun LoginScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Card(
-                    modifier = Modifier.width(480.dp).padding(16.dp),
+                    modifier = Modifier.width(520.dp).padding(16.dp),
                     shape = AppDesign.CardShape,
-                    elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
-                    border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF4F46E5).copy(alpha = 0.2f))
+                    elevation = CardDefaults.cardElevation(defaultElevation = 24.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    border = androidx.compose.foundation.BorderStroke(3.dp, Color(0xFF10B981).copy(alpha = 0.3f))
                 ) {
                     Column(
-                        modifier = Modifier.padding(40.dp).fillMaxWidth(),
+                        modifier = Modifier.padding(48.dp).fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = if (isRegistered) "Xush kelibsiz" else "Hisob yaratish",
+                            text = if (isRegistered) "Xush Kelibsiz" else "Hisob Yaratish",
                             style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFF4F46E5)
+                            fontWeight = FontWeight.Black,
+                            color = Color(0xFF065F46)
                         )
                         
                         Text(
-                            text = if (isRegistered) "Davom etish uchun tizimga kiring" else "O'qituvchi profilini sozlang",
-                            style = MaterialTheme.typography.bodyMedium,
+                            text = if (isRegistered) "Davom etish uchun tizimga kiring" else "Admin profilini sozlang",
+                            style = MaterialTheme.typography.bodyLarge,
                             color = Color(0xFF64748B),
-                            modifier = Modifier.padding(top = 4.dp, bottom = 32.dp)
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(top = 8.dp, bottom = 48.dp)
                         )
 
                         if (errorMessage.isNotEmpty()) {
                             Surface(
-                                color = Color(0xFFFEE2E2),
+                                color = Color(0xFFFEF2F2),
                                 shape = AppDesign.ComponentShape,
-                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF4444).copy(alpha = 0.5f)),
-                                modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
+                                border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFFEF4444).copy(alpha = 0.5f)),
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp)
                             ) {
                                 Text(
                                     text = errorMessage,
                                     color = Color(0xFF991B1B),
                                     style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(16.dp),
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )
@@ -141,12 +151,12 @@ fun LoginScreen(
                             shape = AppDesign.ComponentShape,
                             singleLine = true,
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF4F46E5),
-                                focusedLabelColor = Color(0xFF4F46E5)
+                                focusedBorderColor = Color(0xFF6366F1),
+                                focusedLabelColor = Color(0xFF6366F1)
                             )
                         )
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
 
                         OutlinedTextField(
                             value = password,
@@ -157,13 +167,13 @@ fun LoginScreen(
                             shape = AppDesign.ComponentShape,
                             singleLine = true,
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color(0xFF4F46E5),
-                                focusedLabelColor = Color(0xFF4F46E5)
+                                focusedBorderColor = Color(0xFF6366F1),
+                                focusedLabelColor = Color(0xFF6366F1)
                             )
                         )
 
                         if (!isRegistered) {
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(20.dp))
                             OutlinedTextField(
                                 value = confirmPassword,
                                 onValueChange = { confirmPassword = it; errorMessage = "" },
@@ -173,25 +183,25 @@ fun LoginScreen(
                                 shape = AppDesign.ComponentShape,
                                 singleLine = true,
                                 colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFF4F46E5),
-                                    focusedLabelColor = Color(0xFF4F46E5)
+                                    focusedBorderColor = Color(0xFF6366F1),
+                                    focusedLabelColor = Color(0xFF6366F1)
                                 )
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(40.dp))
+                        Spacer(modifier = Modifier.height(48.dp))
 
                         Button(
                             onClick = handleAction,
-                            modifier = Modifier.fillMaxWidth().height(60.dp),
+                            modifier = Modifier.fillMaxWidth().height(68.dp),
                             shape = AppDesign.ComponentShape,
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4F46E5)),
-                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981), contentColor = Color.White),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 12.dp)
                         ) {
                             Text(
-                                text = if (isRegistered) "Kirish" else "Ro'yxatdan o'tish",
+                                text = if (isRegistered) "KIRISH" else "RO'YXATDAN O'TISH",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.Black
                             )
                         }
                     }

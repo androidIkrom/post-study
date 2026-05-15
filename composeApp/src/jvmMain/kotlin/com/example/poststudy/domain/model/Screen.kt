@@ -11,12 +11,16 @@ sealed class Screen {
     data object StudentIntro : Screen()
     data object TeacherHome : Screen()
     data object Settings : Screen()
+    data object ExamSelection : Screen()
+    data object ExamSettings : Screen()
+    data class EditExam(val exam: Exam) : Screen()
     data class EditLesson(val lesson: Lesson) : Screen()
     data object LessonSelection : Screen()
     data object SlideShow : Screen()
     data object Test : Screen()
     data object Result : Screen()
     data object History : Screen()
+    data object NetworkConnect : Screen()
 }
 
 data class ExamRecord(

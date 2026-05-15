@@ -71,19 +71,19 @@ fun LessonSelectionScreen(
             containerColor = Color.Transparent,
             topBar = {
                 TopAppBar(
-                    title = { Text(if (isTeacher) "Darslar Ro'yxati" else "Dars Tanlash", color = Color.White, fontWeight = FontWeight.ExtraBold) },
+                    title = { Text(if (isTeacher) "Darslar Ro'yxati" else "Dars Tanlash", color = Color(0xFF065F46), fontWeight = FontWeight.Black) },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Orqaga", tint = Color.White)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Orqaga", tint = Color(0xFF065F46))
                         }
                     },
                     actions = {
                         if (isTeacher) {
                             IconButton(onClick = onViewHistory) {
-                                Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Tarix", tint = Color.White)
+                                Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Tarix", tint = Color(0xFF10B981))
                             }
                             IconButton(onClick = onAddNewLesson) {
-                                Icon(Icons.Default.Add, contentDescription = "Qo'shish", tint = Color.White)
+                                Icon(Icons.Default.Add, contentDescription = "Qo'shish", tint = Color(0xFF3B82F6))
                             }
                         }
                     },
@@ -93,32 +93,33 @@ fun LessonSelectionScreen(
         ) { paddingValues ->
             if (isLoading) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = Color.White)
+                    CircularProgressIndicator(color = Color(0xFF10B981))
                 }
             } else if (lessons.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, modifier = Modifier.size(64.dp), tint = Color.White.copy(alpha = 0.5f))
-                        Spacer(Modifier.height(16.dp))
-                        Text("Darslar hali qo'shilmagan", color = Color.White.copy(alpha = 0.7f))
+                        Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, modifier = Modifier.size(80.dp), tint = Color(0xFF10B981).copy(alpha = 0.2f))
+                        Spacer(Modifier.height(24.dp))
+                        Text("Darslar hali qo'shilmagan", color = Color(0xFF64748B), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                         if (isTeacher) {
                             Button(
                                 onClick = onAddNewLesson,
-                                modifier = Modifier.padding(top = 24.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFF4F46E5)),
-                                shape = AppDesign.ComponentShape
+                                modifier = Modifier.padding(top = 32.dp).height(64.dp).width(280.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981), contentColor = Color.White),
+                                shape = AppDesign.ComponentShape,
+                                elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
                             ) {
-                                Text("Birinchi darsni yaratish", fontWeight = FontWeight.Bold)
+                                Text("BIRINCHI DARSNI YARATISH", fontWeight = FontWeight.Black)
                             }
                         }
                     }
                 }
             } else {
                 LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 350.dp),
-                    modifier = Modifier.fillMaxSize().padding(paddingValues).padding(24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                    columns = GridCells.Adaptive(minSize = 400.dp),
+                    modifier = Modifier.fillMaxSize().padding(paddingValues).padding(32.dp),
+                    horizontalArrangement = Arrangement.spacedBy(32.dp),
+                    verticalArrangement = Arrangement.spacedBy(32.dp)
                 ) {
                     items(lessons) { lesson ->
                         LessonCard(
@@ -145,14 +146,14 @@ fun LessonCard(
 ) {
     Surface(
         onClick = onSelect,
-        modifier = Modifier.fillMaxWidth().height(180.dp),
+        modifier = Modifier.fillMaxWidth().height(200.dp),
         shape = AppDesign.CardShape,
-        color = Color.White.copy(alpha = 0.95f),
-        border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF4F46E5).copy(alpha = 0.3f)),
-        shadowElevation = 8.dp
+        color = Color.White,
+        border = androidx.compose.foundation.BorderStroke(3.dp, Color(0xFF10B981).copy(alpha = 0.4f)),
+        shadowElevation = 12.dp
     ) {
         Column(
-            modifier = Modifier.padding(24.dp),
+            modifier = Modifier.padding(32.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
@@ -168,19 +169,25 @@ fun LessonCard(
                         color = Color(0xFF1E293B)
                     )
                     Text(
-                        text = if (lesson.mode == LessonMode.ReAppropriation) "O'rganish va Test" else "Faqat Test",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF4F46E5),
-                        fontWeight = FontWeight.ExtraBold
+                        text = if (lesson.mode == LessonMode.ReAppropriation) "O'RGANISH VA TEST" else "FAQAT TEST",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Color(0xFF10B981),
+                        fontWeight = FontWeight.Black
                     )
                 }
                 
                 if (isTeacher) {
-                    Row {
-                        IconButton(onClick = onEdit) {
-                            Icon(Icons.Default.Edit, contentDescription = "Tahrirlash", tint = Color(0xFF64748B))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        IconButton(
+                            onClick = onEdit,
+                            modifier = Modifier.background(Color(0xFF3B82F6).copy(alpha = 0.1f), CircleShape)
+                        ) {
+                            Icon(Icons.Default.Edit, contentDescription = "Tahrirlash", tint = Color(0xFF3B82F6))
                         }
-                        IconButton(onClick = onDelete) {
+                        IconButton(
+                            onClick = onDelete,
+                            modifier = Modifier.background(Color(0xFFEF4444).copy(alpha = 0.1f), CircleShape)
+                        ) {
                             Icon(Icons.Default.Delete, contentDescription = "O'chirish", tint = Color(0xFFEF4444))
                         }
                     }
@@ -195,13 +202,13 @@ fun LessonCard(
                 InfoBadge(
                     icon = Icons.Default.Timer,
                     text = "${lesson.testTimerSeconds / 60} daq test",
-                    color = Color(0xFF0EA5E9)
+                    color = Color(0xFF3B82F6)
                 )
                 if (lesson.mode == LessonMode.ReAppropriation) {
                     InfoBadge(
                         icon = Icons.AutoMirrored.Filled.MenuBook,
                         text = "${lesson.slideTimerSeconds / 60} daq dars",
-                        color = Color(0xFFFACC15)
+                        color = Color(0xFFF59E0B)
                     )
                 }
             }

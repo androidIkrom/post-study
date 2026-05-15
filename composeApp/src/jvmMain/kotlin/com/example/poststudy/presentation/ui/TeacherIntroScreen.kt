@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.poststudy.presentation.theme.AppDesign
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,7 +43,7 @@ fun TeacherIntroScreen(onNext: () -> Unit, onBack: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundGradient)
+            .background(AppDesign.BackgroundGradient)
     ) {
         Box(
             modifier = Modifier
@@ -65,7 +66,7 @@ fun TeacherIntroScreen(onNext: () -> Unit, onBack: () -> Unit) {
                 CenterAlignedTopAppBar(
                     title = { 
                         Text(
-                            "O'qituvchi uchun qo'llanma",
+                            "Admin uchun qo'llanma",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.ExtraBold,
                             color = Color.White
@@ -92,12 +93,12 @@ fun TeacherIntroScreen(onNext: () -> Unit, onBack: () -> Unit) {
                 
                 TeacherInfoCard(
                     title = "1. Taqdimot va Testlarni tanlash",
-                    content = "Dars yaratish jarayonida 'Taqdimot fayli' uchun (.pptx) va 'Test fayli' uchun (.docx) formatidagi hujjatlarni yuklang. Shuningdek, talabalar har bir slaydni va testni ko'rishlari uchun vaqt limitlarini belgilang."
+                    content = "Dars yaratish jarayonida 'Taqdimot fayli' uchun (.pptx) va 'Test fayli' uchun (.docx) formatidagi hujjatlarni yuklang. Shuningdek, tinglovchilar har bir slaydni va testni ko'rishlari uchun vaqt limitlarini belgilang."
                 )
 
                 TeacherInfoCard(
                     title = "2. Darsni faollashtirish",
-                    content = "Darsni yaratganingizdan so'ng, 'Saqlangan darslar' ro'yxatidan kerakli darsni toping va 'Boshlash' tugmasini bosing. Bu darsni talabalar kirishi uchun asosiy dars sifatida sozlaydi."
+                    content = "Darsni yaratganingizdan so'ng, 'Saqlangan darslar' ro'yxatidan kerakli darsni toping va 'Boshlash' tugmasini bosing. Bu darsni tinglovchilar kirishi uchun asosiy dars sifatida sozlaydi."
                 )
 
                 TeacherInfoCard(

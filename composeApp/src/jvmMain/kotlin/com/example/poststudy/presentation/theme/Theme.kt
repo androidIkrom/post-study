@@ -38,14 +38,14 @@ private val DarkColorScheme = darkColorScheme(
 object AppDesign {
     val BackgroundGradient = Brush.verticalGradient(
         colors = listOf(
-            Color(0xFF4F46E5),
-            Color(0xFF7C3AED),
-            Color(0xFFC026D3)
+            Color(0xFFECFDF5), // Very light emerald
+            Color(0xFFD1FAE5), // Light emerald
+            Color(0xFFFFFFFF)  // White
         )
     )
     
-    val CardShape = RoundedCornerShape(28.dp)
-    val ComponentShape = RoundedCornerShape(16.dp)
+    val CardShape = RoundedCornerShape(32.dp)
+    val ComponentShape = RoundedCornerShape(20.dp)
 }
 
 @Composable

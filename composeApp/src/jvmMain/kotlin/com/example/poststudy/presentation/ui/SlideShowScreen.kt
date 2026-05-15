@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.poststudy.presentation.theme.AppDesign
 import com.example.poststudy.presentation.ui.components.PostStudyDialog
 import kotlinx.coroutines.delay
 import java.awt.image.BufferedImage
@@ -59,7 +60,7 @@ fun SlideShowScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(backgroundGradient)
+            .background(AppDesign.BackgroundGradient)
     ) {
         Scaffold(
             containerColor = Color.Transparent,
