@@ -1,6 +1,8 @@
 package com.example.poststudy.domain.model
 
 sealed class Screen {
+    data object Info : Screen()
+    data object Splash : Screen()
     data object RoleSelection : Screen()
     data object Login : Screen()
     data object Readme : Screen()

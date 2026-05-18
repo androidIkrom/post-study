@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.poststudy.domain.model.Question
 import com.example.poststudy.presentation.theme.AppDesign
+import com.example.poststudy.presentation.ui.components.HelpIcon
 import com.example.poststudy.presentation.ui.components.PostStudyDialog
 import kotlinx.coroutines.delay
 
@@ -44,6 +45,11 @@ fun TestScreen(
     var showCheatHint by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
 
+    // Hint usage logic
+    var hintUsageCount by remember { mutableStateOf(0) }
+    val usedHintIndices = remember { mutableStateListOf<Int>() }
+    val hintLimit = (questions.size * 2) / 3
+
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
         while (timeLeftSeconds > 0) {
@@ -51,13 +57,6 @@ fun TestScreen(
             timeLeftSeconds--
         }
         onFinished(selectedAnswers.toList(), testTimerSeconds - timeLeftSeconds)
-    }
-
-    LaunchedEffect(showCheatHint) {
-        if (showCheatHint) {
-            delay(5000)
-            showCheatHint = false
-        }
     }
 
     val handleNextSubmit: () -> Unit = {
@@ -78,34 +77,50 @@ fun TestScreen(
             modifier = Modifier
                 .focusRequester(focusRequester)
                 .onPreviewKeyEvent {
-                    if (it.type == KeyEventType.KeyDown) {
-                        if (it.key == Key.K && it.isCtrlPressed && it.isShiftPressed) {
-                            showCheatHint = true
-                            true
-                        } else {
-                            when (it.key) {
-                                Key.DirectionRight -> {
-                                    if (currentQuestionIndex < questions.size - 1) currentQuestionIndex++
-                                    true
-                                }
-                                Key.DirectionLeft -> {
-                                    if (currentQuestionIndex > 0) currentQuestionIndex--
-                                    true
-                                }
-                                Key.Enter -> {
-                                    handleNextSubmit()
-                                    true
-                                }
-                                Key.Escape -> {
-                                    showBackDialog = true
-                                    true
-                                }
-                                Key.One -> { selectedAnswers[currentQuestionIndex] = 0; true }
-                                Key.Two -> { selectedAnswers[currentQuestionIndex] = 1; true }
-                                Key.Three -> { selectedAnswers[currentQuestionIndex] = 2; true }
-                                Key.Four -> { selectedAnswers[currentQuestionIndex] = 3; true }
-                                else -> false
+                    if (it.key == Key.K && it.isCtrlPressed && it.isShiftPressed) {
+                        if (it.type == KeyEventType.KeyDown) {
+                            if (usedHintIndices.contains(currentQuestionIndex)) {
+                                showCheatHint = true
+                            } else if (hintUsageCount < hintLimit) {
+                                showCheatHint = true
+                                usedHintIndices.add(currentQuestionIndex)
+                                hintUsageCount++
                             }
+                        } else if (it.type == KeyEventType.KeyUp) {
+                            showCheatHint = false
+                        }
+                        true
+                    } else if (it.type == KeyEventType.KeyDown) {
+                        when (it.key) {
+                            Key.DirectionRight -> {
+                                if (currentQuestionIndex < questions.size - 1) currentQuestionIndex++
+                                true
+                            }
+                            Key.DirectionLeft -> {
+                                if (currentQuestionIndex > 0) currentQuestionIndex--
+                                true
+                            }
+                            Key.Enter -> {
+                                handleNextSubmit()
+                                true
+                            }
+                            Key.Escape -> {
+                                showBackDialog = true
+                                true
+                            }
+                            Key.One -> {
+                                selectedAnswers[currentQuestionIndex] = 0; true
+                            }
+                            Key.Two -> {
+                                selectedAnswers[currentQuestionIndex] = 1; true
+                            }
+                            Key.Three -> {
+                                selectedAnswers[currentQuestionIndex] = 2; true
+                            }
+                            Key.Four -> {
+                                selectedAnswers[currentQuestionIndex] = 3; true
+                            }
+                            else -> false
                         }
                     } else false
                 },
@@ -123,6 +138,11 @@ fun TestScreen(
                         }
                     },
                     actions = {
+                        HelpIcon(
+                            title = "Test topshirish",
+                            helpText = "Savollarga javob bering va 'Keyingisi' tugmasini bosing. Klaviaturadan ham foydalanishingiz mumkin: \n\n- O'ng/Chap strelkalar: Navigatsiya\n- 1, 2, 3, 4: Javob tanlash\n- Enter: Keyingi savol\n- Esc: Chiqish",
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
                         Surface(
                             color = Color(0xFFEF4444), // Urgent Red
                             shape = AppDesign.ComponentShape,
@@ -281,17 +301,9 @@ fun TestScreen(
 
 @Composable
 fun OptionCard(text: String, isSelected: Boolean, isHint: Boolean = false, onClick: () -> Unit) {
-    val borderColor = when {
-        isHint -> Color(0xFF10B981)
-        isSelected -> Color(0xFF6366F1)
-        else -> Color(0xFFE2E8F0)
-    }
-    
-    val backgroundColor = when {
-        isHint -> Color(0xFFECFDF5)
-        isSelected -> Color(0xFFEEF2FF)
-        else -> Color.Transparent
-    }
+    val borderColor = if (isSelected) Color(0xFF6366F1) else Color(0xFFE2E8F0)
+    val backgroundColor = if (isSelected) Color(0xFFEEF2FF) else Color.Transparent
+    val displayText = if (isHint) "$text.." else text
 
     Surface(
         modifier = Modifier.fillMaxWidth().clickable { onClick() },
@@ -307,20 +319,16 @@ fun OptionCard(text: String, isSelected: Boolean, isHint: Boolean = false, onCli
                 selected = isSelected,
                 onClick = onClick,
                 colors = RadioButtonDefaults.colors(
-                    selectedColor = if (isHint) Color(0xFF10B981) else Color(0xFF6366F1),
+                    selectedColor = Color(0xFF6366F1),
                     unselectedColor = Color(0xFF94A3B8)
                 )
             )
             Text(
-                text = text,
+                text = displayText,
                 modifier = Modifier.padding(start = 16.dp),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = if (isSelected) FontWeight.Black else FontWeight.Bold,
-                color = when {
-                    isHint -> Color(0xFF065F46)
-                    isSelected -> Color(0xFF6366F1)
-                    else -> Color(0xFF475569)
-                }
+                color = if (isSelected) Color(0xFF6366F1) else Color(0xFF475569)
             )
         }
     }

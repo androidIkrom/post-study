@@ -22,6 +22,7 @@ import com.example.poststudy.data.local.DatabaseHelper
 import com.example.poststudy.data.util.TestParser
 import com.example.poststudy.domain.model.*
 import com.example.poststudy.presentation.theme.AppDesign
+import com.example.poststudy.presentation.ui.components.HelpIcon
 import com.example.poststudy.presentation.ui.components.PostStudyDialog
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerMode
@@ -116,6 +117,13 @@ fun SettingsScreen(
                         IconButton(onClick = onBack) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Orqaga", tint = Color(0xFF1E293B))
                         }
+                    },
+                    actions = {
+                        HelpIcon(
+                            title = "Dars sozlamalari",
+                            helpText = "Bu yerda dars nomi, taqdimot va test fayllarini tanlang. Taymerlar kamida 5 daqiqa bo'lishi kerak.",
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
                 )

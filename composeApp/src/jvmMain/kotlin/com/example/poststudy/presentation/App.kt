@@ -18,6 +18,7 @@ import com.example.poststudy.data.util.TestParser
 import com.example.poststudy.domain.model.*
 import com.example.poststudy.presentation.theme.PostStudyTheme
 import com.example.poststudy.presentation.ui.*
+import com.example.poststudy.presentation.ui.components.HelpIcon
 import com.example.poststudy.presentation.ui.components.PostStudyDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -25,7 +26,7 @@ import java.awt.image.BufferedImage
 
 @Composable
 fun App() {
-    var currentScreen by remember { mutableStateOf<Screen>(Screen.RoleSelection) }
+    var currentScreen by remember { mutableStateOf<Screen>(Screen.Info) }
     var selectedRole by remember { mutableStateOf<UserRole?>(null) }
     
     var slides by remember { mutableStateOf<List<BufferedImage>>(emptyList()) }
@@ -52,43 +53,70 @@ fun App() {
         ) {
             Crossfade(targetState = currentScreen) { screen ->
                 when (screen) {
-                    is Screen.RoleSelection -> RoleSelectionScreen(
-                        onRoleSelected = { role ->
-                            selectedRole = role
-                            isNetworkMode = false
-                            if (role == UserRole.Teacher) {
-                                currentScreen = Screen.Login
-                            } else {
-                                currentScreen = Screen.StudentHome
+                    is Screen.Info -> InfoScreen(
+                        onContinue = { currentScreen = Screen.Splash }
+                    )
+                    is Screen.Splash -> SplashScreen(
+                        onContinue = { currentScreen = Screen.RoleSelection }
+                    )
+                    is Screen.RoleSelection -> Box {
+                        RoleSelectionScreen(
+                            onRoleSelected = { role ->
+                                selectedRole = role
+                                isNetworkMode = false
+                                if (role == UserRole.Teacher) {
+                                    currentScreen = Screen.Login
+                                } else {
+                                    currentScreen = Screen.StudentHome
+                                }
+                            },
+                            onJoinNetwork = {
+                                selectedRole = UserRole.Student
+                                isNetworkMode = true
+                                currentScreen = Screen.NetworkConnect
                             }
-                        },
-                        onJoinNetwork = {
-                            selectedRole = UserRole.Student
-                            isNetworkMode = true
-                            currentScreen = Screen.NetworkConnect
-                        }
-                    )
-                    is Screen.NetworkConnect -> NetworkConnectScreen(
-                        onConnected = { ip, session ->
-                            serverIp = ip
-                            currentLessonTitle = session.title
-                            questions = session.questions
-                            slideTimer = session.slideTimerSeconds
-                            testTimer = session.testTimerSeconds
-                            currentSessionMode = session.mode
-                            currentScreen = Screen.StudentIntro
-                        },
-                        onBack = { currentScreen = Screen.RoleSelection }
-                    )
-                    is Screen.StudentHome -> StudentHomeScreen(
-                        onNavigateToPreparation = { currentScreen = Screen.PreparationLessonSelection },
-                        onNavigateToTest = { 
-                            isLoading = true
-                            isPreparationMode = false
-                            currentScreen = Screen.StudentIntro 
-                        },
-                        onBack = { currentScreen = Screen.RoleSelection }
-                    )
+                        )
+                        HelpIcon(
+                            title = "Rolni tanlash",
+                            helpText = "PostStudy-ga xush kelibsiz! Darslarni boshqarish uchun 'O'qituvchi' yoki test topshirish uchun 'Talaba' rolini tanlang.",
+                            modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
+                        )
+                    }
+                    is Screen.NetworkConnect -> Box {
+                        NetworkConnectScreen(
+                            onConnected = { ip, session ->
+                                serverIp = ip
+                                currentLessonTitle = session.title
+                                questions = session.questions
+                                slideTimer = session.slideTimerSeconds
+                                testTimer = session.testTimerSeconds
+                                currentSessionMode = session.mode
+                                currentScreen = Screen.StudentIntro
+                            },
+                            onBack = { currentScreen = Screen.RoleSelection }
+                        )
+                        HelpIcon(
+                            title = "Tarmoqqa ulanish",
+                            helpText = "O'qituvchi kompyuteridagi IP manzilni kiriting va 'Ulanish' tugmasini bosing.",
+                            modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
+                        )
+                    }
+                    is Screen.StudentHome -> Box {
+                        StudentHomeScreen(
+                            onNavigateToPreparation = { currentScreen = Screen.PreparationLessonSelection },
+                            onNavigateToTest = { 
+                                isLoading = true
+                                isPreparationMode = false
+                                currentScreen = Screen.StudentIntro 
+                            },
+                            onBack = { currentScreen = Screen.RoleSelection }
+                        )
+                        HelpIcon(
+                            title = "Talaba asosiysi",
+                            helpText = "Mavjud darslarni o'rganish uchun 'Tayyorgarlik' yoki o'qituvchi tomonidan belgilangan testni topshirish uchun 'Test sessiyasi'ni tanlang.",
+                            modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
+                        )
+                    }
                     is Screen.PreparationLessonSelection -> LessonSelectionScreen(
                         isTeacher = false,
                         onLessonSelected = { lesson ->
@@ -137,7 +165,14 @@ fun App() {
                                     val count = if (s.questionsPerStudent > 0) minOf(s.questionsPerStudent, qList.size) else qList.size
                                     SessionData(
                                         title = s.activeSessionTitle.ifBlank { "Dars" },
-                                        questions = qList.shuffled().take(count),
+                                        questions = qList.shuffled().take(count).map { q ->
+                                            val indexedOptions = q.options.withIndex().shuffled()
+                                            val newCorrectIndex = indexedOptions.indexOfFirst { it.index == q.correctIndex }
+                                            q.copy(
+                                                options = indexedOptions.map { it.value },
+                                                correctIndex = newCorrectIndex
+                                            )
+                                        },
                                         slideTimerSeconds = s.slideTimerSeconds,
                                         testTimerSeconds = s.testTimerSeconds,
                                         mode = s.mode
@@ -155,31 +190,45 @@ fun App() {
                         onNext = { currentScreen = Screen.TeacherHome },
                         onBack = { currentScreen = Screen.Login }
                     )
-                    is Screen.TeacherHome -> TeacherHomeScreen(
-                        onNavigateToLessons = { currentScreen = Screen.LessonSelection },
-                        onNavigateToExam = { currentScreen = Screen.ExamSelection },
-                        onNavigateToHistory = { currentScreen = Screen.History },
-                        onBack = { currentScreen = Screen.RoleSelection }
-                    )
-                    is Screen.ExamSelection -> ExamSelectionScreen(
-                        onExamSelected = { exam ->
-                            DatabaseHelper.saveSettings(
-                                presentationPath = "",
-                                testPath = exam.testPath,
-                                slideTimerMin = 0,
-                                testTimerMin = exam.testTimerSeconds / 60,
-                                mode = LessonMode.TestOnly,
-                                sessionTitle = exam.title,
-                                qCount = exam.questionsPerStudent
-                            )
-                            currentLessonTitle = exam.title
-                            currentSessionMode = LessonMode.TestOnly
-                            currentScreen = Screen.TeacherHome
-                        },
-                        onAddNewExam = { currentScreen = Screen.ExamSettings },
-                        onEditExam = { exam -> currentScreen = Screen.EditExam(exam) },
-                        onBack = { currentScreen = Screen.TeacherHome }
-                    )
+                    is Screen.TeacherHome -> Box {
+                        TeacherHomeScreen(
+                            onNavigateToLessons = { currentScreen = Screen.LessonSelection },
+                            onNavigateToExam = { currentScreen = Screen.ExamSelection },
+                            onNavigateToHistory = { currentScreen = Screen.History },
+                            onBack = { currentScreen = Screen.RoleSelection }
+                        )
+                        HelpIcon(
+                            title = "O'qituvchi asosiysi",
+                            helpText = "Bu yerda siz darslarni boshqarishingiz, yangi imtihonlar yaratishingiz va talabalar natijalari tarixini ko'rishingiz mumkin.",
+                            modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
+                        )
+                    }
+                    is Screen.ExamSelection -> Box {
+                        ExamSelectionScreen(
+                            onExamSelected = { exam ->
+                                DatabaseHelper.saveSettings(
+                                    presentationPath = "",
+                                    testPath = exam.testPath,
+                                    slideTimerMin = 0,
+                                    testTimerMin = exam.testTimerSeconds / 60,
+                                    mode = LessonMode.TestOnly,
+                                    sessionTitle = exam.title,
+                                    qCount = exam.questionsPerStudent
+                                )
+                                currentLessonTitle = exam.title
+                                currentSessionMode = LessonMode.TestOnly
+                                currentScreen = Screen.TeacherHome
+                            },
+                            onAddNewExam = { currentScreen = Screen.ExamSettings },
+                            onEditExam = { exam -> currentScreen = Screen.EditExam(exam) },
+                            onBack = { currentScreen = Screen.TeacherHome }
+                        )
+                        HelpIcon(
+                            title = "Imtihonlar",
+                            helpText = "Bu bo'limda siz faqat testdan iborat bo'lgan imtihon sessiyalarini boshqarishingiz mumkin.",
+                            modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
+                        )
+                    }
                     is Screen.ExamSettings -> ExamSettingsScreen(
                         onSaveComplete = { currentScreen = Screen.ExamSelection },
                         onBack = { currentScreen = Screen.ExamSelection }
@@ -193,34 +242,41 @@ fun App() {
                         onNext = { currentScreen = Screen.TeacherHome },
                         onBack = { currentScreen = Screen.TeacherHome }
                     )
-                    is Screen.LessonSelection -> LessonSelectionScreen(
-                        onLessonSelected = { lesson ->
-                            DatabaseHelper.saveSettings(
-                                lesson.presentationPath,
-                                lesson.testPath,
-                                lesson.slideTimerSeconds / 60,
-                                lesson.testTimerSeconds / 60,
-                                lesson.mode,
-                                lesson.title,
-                                0 // All questions
-                            )
-                            currentLessonTitle = lesson.title
-                            currentSessionMode = lesson.mode
-                            currentScreen = Screen.TeacherHome
-                        },
-                        onAddNewLesson = {
-                            currentScreen = Screen.Settings
-                        },
-                        onEditLesson = { lesson ->
-                            currentScreen = Screen.EditLesson(lesson)
-                        },
-                        onViewHistory = {
-                            currentScreen = Screen.History
-                        },
-                        onBack = {
-                            currentScreen = Screen.TeacherHome
-                        }
-                    )
+                    is Screen.LessonSelection -> Box {
+                        LessonSelectionScreen(
+                            onLessonSelected = { lesson ->
+                                DatabaseHelper.saveSettings(
+                                    lesson.presentationPath,
+                                    lesson.testPath,
+                                    lesson.slideTimerSeconds / 60,
+                                    lesson.testTimerSeconds / 60,
+                                    lesson.mode,
+                                    lesson.title,
+                                    0 // All questions
+                                )
+                                currentLessonTitle = lesson.title
+                                currentSessionMode = lesson.mode
+                                currentScreen = Screen.TeacherHome
+                            },
+                            onAddNewLesson = {
+                                currentScreen = Screen.Settings
+                            },
+                            onEditLesson = { lesson ->
+                                currentScreen = Screen.EditLesson(lesson)
+                            },
+                            onViewHistory = {
+                                currentScreen = Screen.History
+                            },
+                            onBack = {
+                                currentScreen = Screen.TeacherHome
+                            }
+                        )
+                        HelpIcon(
+                            title = "Darslarni tanlash",
+                            helpText = "Mavjud darslardan birini tanlang yoki yangisini qo'shing. Har bir dars taqdimot va testdan iborat bo'ladi.",
+                            modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
+                        )
+                    }
                     is Screen.StudentIntro -> {
                         if (isLoading) {
                             LaunchedEffect(isLoading, isNetworkMode) {
@@ -256,14 +312,14 @@ fun App() {
                                         }
                                         val result = TestParser.parseTest(settings.testPath)
                                         val rawQuestions = result.questions
-                                        val shuffled = rawQuestions.shuffled()
+                                        val shuffledQuestions = rawQuestions.shuffled()
                                         val count = if (settings.questionsPerStudent > 0) {
-                                            minOf(settings.questionsPerStudent, shuffled.size)
+                                            minOf(settings.questionsPerStudent, shuffledQuestions.size)
                                         } else {
-                                            shuffled.size
+                                            shuffledQuestions.size
                                         }
                                         
-                                        questions = shuffled.take(count).map { q ->
+                                        questions = shuffledQuestions.take(count).map { q ->
                                             val indexedOptions = q.options.withIndex().shuffled()
                                             val newCorrectIndex = indexedOptions.indexOfFirst { it.index == q.correctIndex }
                                             q.copy(
@@ -304,7 +360,7 @@ fun App() {
                                 testTimerSeconds = testTimer,
                                 mode = currentSessionMode,
                                 onStart = {
-                                    if (currentSessionMode == LessonMode.ReAppropriation) {
+                                    if (currentSessionMode == LessonMode.ReAppropriation && slides.isNotEmpty()) {
                                         currentScreen = Screen.SlideShow
                                     } else {
                                         currentScreen = Screen.Test

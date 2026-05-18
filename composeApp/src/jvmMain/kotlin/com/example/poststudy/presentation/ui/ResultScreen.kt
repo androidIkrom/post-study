@@ -5,7 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -36,7 +36,8 @@ fun ResultScreen(
     val correctCount = questions.zip(userAnswers).count { (question, answer) ->
         question.correctIndex == answer
     }
-    val percentage = if (questions.isNotEmpty()) (correctCount.toDouble() / questions.size * 100).toInt() else 0
+    val percentage =
+        if (questions.isNotEmpty()) (correctCount.toDouble() / questions.size * 100).toInt() else 0
     val focusRequester = remember { FocusRequester() }
 
     val scoreColor = when {
@@ -50,151 +51,205 @@ fun ResultScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AppDesign.BackgroundGradient)
+        modifier = Modifier.fillMaxSize().background(AppDesign.BackgroundGradient)
     ) {
         // Decorative background elements
         Box(
-            modifier = Modifier
-                .size(600.dp)
-                .offset(x = (-200).dp, y = (-200).dp)
+            modifier = Modifier.size(600.dp).offset(x = (-200).dp, y = (-200).dp)
                 .background(scoreColor.copy(alpha = 0.05f), CircleShape)
         )
 
         Scaffold(
             containerColor = Color.Transparent,
-            modifier = Modifier
-                .focusRequester(focusRequester)
-                .onPreviewKeyEvent {
+            modifier = Modifier.focusRequester(focusRequester).onPreviewKeyEvent {
                     if (it.key == Key.Enter && it.type == KeyEventType.KeyDown) {
                         onFinish()
                         true
                     } else false
                 },
             topBar = {
+                val wrongCount =
+                    questions.zip(userAnswers).count { it.first.correctIndex != it.second }
                 CenterAlignedTopAppBar(
-                    title = { Text("Natijalar Tahlili", fontWeight = FontWeight.Black, color = Color(0xFF1E293B)) },
+                    title = {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            "Natijalar Tahlili",
+                            fontWeight = FontWeight.Black,
+                            color = Color(0xFF1E293B)
+                        )
+                        Text(
+                            "Savollar: ${questions.size} | Javoblar: ${userAnswers.size} | Xatolar: $wrongCount",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.Gray
+                        )
+                    }
+                },
                     navigationIcon = {
                         IconButton(onClick = onFinish) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Orqaga", tint = Color(0xFF1E293B))
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Orqaga",
+                                tint = Color(0xFF1E293B)
+                            )
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
                 )
-            }
-        ) { paddingValues ->
-            Column(
-                modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            }) { paddingValues ->
+            // Use a single LazyColumn for the entire screen to ensure scrolling works perfectly
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().padding(paddingValues)
+                    .padding(horizontal = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+                contentPadding = PaddingValues(top = 24.dp, bottom = 48.dp)
             ) {
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                Card(
-                    modifier = Modifier.fillMaxWidth().widthIn(max = 700.dp),
-                    shape = AppDesign.CardShape,
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 20.dp),
-                    border = androidx.compose.foundation.BorderStroke(4.dp, scoreColor.copy(alpha = 0.4f))
-                ) {
-                    Column(
-                        modifier = Modifier.padding(48.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                // 1. Result Summary Card
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth().widthIn(max = 700.dp),
+                        shape = AppDesign.CardShape,
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 20.dp),
+                        border = androidx.compose.foundation.BorderStroke(
+                            4.dp, scoreColor.copy(alpha = 0.4f)
+                        )
                     ) {
-                        Text(
-                            text = "Sizning yakuniy natijangiz",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = Color(0xFF64748B),
-                            fontWeight = FontWeight.Black
-                        )
-                        Text(
-                            text = studentName,
-                            style = MaterialTheme.typography.displayMedium,
-                            fontWeight = FontWeight.Black,
-                            color = Color(0xFF1E293B),
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                        
-                        Spacer(modifier = Modifier.height(32.dp))
-
-                        Box(
-                            modifier = Modifier
-                                .size(220.dp)
-                                .background(scoreColor.copy(alpha = 0.1f), CircleShape)
-                                .border(6.dp, scoreColor, CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = "$percentage%",
-                                    style = MaterialTheme.typography.displayMedium,
-                                    fontWeight = FontWeight.Black,
-                                    color = scoreColor
-                                )
-                                Text(
-                                    text = "$correctCount / ${questions.size}",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Black,
-                                    color = scoreColor.copy(alpha = 0.8f)
-                                )
-                            }
-                        }
-                        
-                        Spacer(modifier = Modifier.height(48.dp))
-
-                        val timeMinutes = timeSpentSeconds / 60
-                        val timeSeconds = timeSpentSeconds % 60
-                        Surface(
-                            color = Color(0xFFF1F5F9),
-                            shape = CircleShape,
-                            border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFFE2E8F0))
+                        Column(
+                            modifier = Modifier.padding(48.dp).fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "Sarflangan vaqt: %d:%02d".format(timeMinutes, timeSeconds),
-                                modifier = Modifier.padding(horizontal = 32.dp, vertical = 12.dp),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Black,
-                                color = Color(0xFF475569)
+                                text = "Sizning yakuniy natijangiz",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = Color(0xFF64748B),
+                                fontWeight = FontWeight.Black
                             )
+                            Text(
+                                text = studentName,
+                                style = MaterialTheme.typography.displayMedium,
+                                fontWeight = FontWeight.Black,
+                                color = Color(0xFF1E293B),
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+
+                            Spacer(modifier = Modifier.height(32.dp))
+
+                            Box(
+                                modifier = Modifier.size(220.dp)
+                                    .background(scoreColor.copy(alpha = 0.1f), CircleShape)
+                                    .border(6.dp, scoreColor, CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = "$percentage%",
+                                        style = MaterialTheme.typography.displayMedium,
+                                        fontWeight = FontWeight.Black,
+                                        color = scoreColor
+                                    )
+                                    Text(
+                                        text = "$correctCount / ${questions.size}",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Black,
+                                        color = scoreColor.copy(alpha = 0.8f)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(48.dp))
+
+                            val timeMinutes = timeSpentSeconds / 60
+                            val timeSeconds = timeSpentSeconds % 60
+                            Surface(
+                                color = Color(0xFFF1F5F9),
+                                shape = CircleShape,
+                                border = androidx.compose.foundation.BorderStroke(
+                                    2.dp, Color(0xFFE2E8F0)
+                                )
+                            ) {
+                                Text(
+                                    text = "Sarflangan vaqt: %d:%02d".format(
+                                        timeMinutes, timeSeconds
+                                    ),
+                                    modifier = Modifier.padding(
+                                        horizontal = 32.dp, vertical = 12.dp
+                                    ),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Black,
+                                    color = Color(0xFF475569)
+                                )
+                            }
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(40.dp))
+                // 2. Analysis Section
+                val wrongQuestions = questions.mapIndexedNotNull { index, question ->
+                    val userAnswer = userAnswers.getOrNull(index)
+                    if (userAnswer != question.correctIndex) {
+                        Triple(index, question, userAnswer)
+                    } else null
+                }
 
-                LazyColumn(
-                    modifier = Modifier.weight(1f).fillMaxWidth().widthIn(max = 900.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp),
-                    contentPadding = PaddingValues(bottom = 48.dp)
-                ) {
-                    itemsIndexed(questions) { index, question ->
-                        val userAnswerIndex = userAnswers.getOrNull(index)
-                        val isCorrect = userAnswerIndex == question.correctIndex
+                if (wrongQuestions.isEmpty()) {
+                    item {
+                        Box(
+                            Modifier.fillMaxWidth().padding(48.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "Barcha javoblar to'g'ri! Ajoyib natija!",
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Black,
+                                color = Color(0xFF10B981)
+                            )
+                        }
+                    }
+                } else {
+                    item {
+                        Text(
+                            "Xato javoblar tahlili:",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Black,
+                            color = Color(0xFFEF4444),
+                            modifier = Modifier.fillMaxWidth().widthIn(max = 900.dp)
+                                .padding(top = 20.dp)
+                        )
+                    }
+
+                    items(wrongQuestions) { triple ->
+                        val originalIndex = triple.first
+                        val question = triple.second
+                        val userAnswerIndex = triple.third
 
                         Card(
-                            modifier = Modifier.fillMaxWidth().animateContentSize(),
+                            modifier = Modifier.fillMaxWidth().widthIn(max = 900.dp)
+                                .animateContentSize(),
                             shape = AppDesign.CardShape,
                             colors = CardDefaults.cardColors(containerColor = Color.White),
                             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                             border = androidx.compose.foundation.BorderStroke(
-                                3.dp, 
-                                if (isCorrect) Color(0xFF10B981).copy(alpha = 0.3f) else Color(0xFFEF4444).copy(alpha = 0.3f)
+                                3.dp, Color(0xFFEF4444).copy(alpha = 0.3f)
                             )
                         ) {
                             Column(modifier = Modifier.padding(32.dp)) {
                                 Row(verticalAlignment = Alignment.Top) {
                                     Surface(
-                                        color = if (isCorrect) Color(0xFF10B981).copy(alpha = 0.1f) else Color(0xFFEF4444).copy(alpha = 0.1f),
+                                        color = Color(0xFFEF4444).copy(alpha = 0.1f),
                                         shape = CircleShape,
                                         modifier = Modifier.size(48.dp),
-                                        border = androidx.compose.foundation.BorderStroke(3.dp, if (isCorrect) Color(0xFF10B981) else Color(0xFFEF4444))
+                                        border = androidx.compose.foundation.BorderStroke(
+                                            3.dp, Color(0xFFEF4444)
+                                        )
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
                                             Text(
-                                                text = "${index + 1}",
+                                                text = "${originalIndex + 1}",
                                                 style = MaterialTheme.typography.headlineSmall,
                                                 fontWeight = FontWeight.Black,
-                                                color = if (isCorrect) Color(0xFF10B981) else Color(0xFFEF4444)
+                                                color = Color(0xFFEF4444)
                                             )
                                         }
                                     }
@@ -206,41 +261,44 @@ fun ResultScreen(
                                         color = Color(0xFF1E293B)
                                     )
                                 }
-                                
+
                                 Spacer(modifier = Modifier.height(32.dp))
 
-                                val userAnswerText = userAnswerIndex?.let { question.options.getOrNull(it) } ?: "O'tkazib yuborildi"
-                                val correctAnswerText = question.options[question.correctIndex]
+                                val userAnswerText =
+                                    userAnswerIndex?.let { question.options.getOrNull(it) }
+                                        ?: "O'tkazib yuborildi"
 
                                 ResultDetailBox(
                                     label = "Sizning javobingiz",
                                     text = userAnswerText,
-                                    color = if (isCorrect) Color(0xFF059669) else Color(0xFFEF4444),
-                                    backgroundColor = if (isCorrect) Color(0xFFECFDF5) else Color(0xFFFFF1F2)
+                                    color = Color(0xFFEF4444),
+                                    backgroundColor = Color(0xFFFFF1F2)
                                 )
-
-                                if (!isCorrect) {
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    ResultDetailBox(
-                                        label = "To'g'ri javob",
-                                        text = correctAnswerText,
-                                        color = Color(0xFF059669),
-                                        backgroundColor = Color(0xFFECFDF5)
-                                    )
-                                }
                             }
                         }
                     }
                 }
 
-                Button(
-                    onClick = onFinish,
-                    modifier = Modifier.padding(vertical = 32.dp).width(400.dp).height(72.dp),
-                    shape = AppDesign.ComponentShape,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981), contentColor = Color.White),
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 12.dp)
-                ) {
-                    Text("TAYYOR", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                // 3. Finish Button
+                item {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Button(
+                            onClick = onFinish,
+                            modifier = Modifier.padding(vertical = 32.dp).width(400.dp)
+                                .height(72.dp),
+                            shape = AppDesign.ComponentShape,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF10B981), contentColor = Color.White
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 12.dp)
+                        ) {
+                            Text(
+                                "TAYYOR",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Black
+                            )
+                        }
+                    }
                 }
             }
         }

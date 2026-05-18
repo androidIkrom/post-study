@@ -73,9 +73,10 @@ fun ExamSelectionScreen(
                         }
                     },
                     actions = {
-                        IconButton(onClick = onAddNewExam) {
+                        IconButton(onClick = onAddNewExam, modifier = Modifier.padding(top = 16.dp)) {
                             Icon(Icons.Default.Add, contentDescription = "Qo'shish", tint = Color(0xFF6366F1))
                         }
+                        Spacer(Modifier.width(46.dp))
                     },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
                 )

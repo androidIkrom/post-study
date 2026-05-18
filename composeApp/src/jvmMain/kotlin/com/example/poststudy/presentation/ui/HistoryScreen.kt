@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.example.poststudy.data.local.DatabaseHelper
 import com.example.poststudy.domain.model.ExamRecord
 import com.example.poststudy.presentation.theme.AppDesign
+import com.example.poststudy.presentation.ui.components.HelpIcon
 import com.example.poststudy.presentation.ui.components.PostStudyDialog
 import java.text.SimpleDateFormat
 import java.util.*
@@ -77,6 +78,11 @@ fun HistoryScreen(onBack: () -> Unit) {
                         }
                     },
                     actions = {
+                        HelpIcon(
+                            title = "Imtihon tarixi",
+                            helpText = "Bu yerda barcha topshirilgan testlar natijalarini ko'rishingiz mumkin. Xatolarni ko'rish uchun har bir yozuv ostidagi tugmani bosing.",
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
                         if (records.isNotEmpty()) {
                             IconButton(onClick = { showClearAllDialog = true }) {
                                 Icon(Icons.Default.Delete, contentDescription = "Hammasini tozalash", tint = Color(0xFF065F46))

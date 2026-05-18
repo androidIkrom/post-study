@@ -20,6 +20,7 @@ import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.poststudy.presentation.theme.AppDesign
+import com.example.poststudy.presentation.ui.components.HelpIcon
 import com.example.poststudy.presentation.ui.components.PostStudyDialog
 import kotlinx.coroutines.delay
 import java.awt.image.BufferedImage
@@ -104,6 +105,12 @@ fun SlideShowScreen(
                         }
                     },
                     actions = {
+                        HelpIcon(
+                            title = "Taqdimotni ko'rish",
+                            helpText = "Slaydlarni ko'rib chiqing va o'rganing. Navigatsiya uchun tugmalardan yoki klaviaturadagi O'ng/Chap strelkalardan foydalanishingiz mumkin.",
+                            tint = Color.White,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
                         if (slideTimerSeconds > 0) {
                             Surface(
                                 color = Color(0xFF6366F1),

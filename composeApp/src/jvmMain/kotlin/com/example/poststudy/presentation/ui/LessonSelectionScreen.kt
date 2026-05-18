@@ -78,12 +78,14 @@ fun LessonSelectionScreen(
                         }
                     },
                     actions = {
-                        if (isTeacher) {
-                            IconButton(onClick = onViewHistory) {
-                                Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Tarix", tint = Color(0xFF10B981))
-                            }
-                            IconButton(onClick = onAddNewLesson) {
-                                Icon(Icons.Default.Add, contentDescription = "Qo'shish", tint = Color(0xFF3B82F6))
+                        Row(modifier = Modifier.padding(top = 16.dp, end = 46.dp)){
+                            if (isTeacher) {
+                                IconButton(onClick = onViewHistory) {
+                                    Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Tarix", tint = Color(0xFF10B981))
+                                }
+                                IconButton(onClick = onAddNewLesson) {
+                                    Icon(Icons.Default.Add, contentDescription = "Qo'shish", tint = Color(0xFF3B82F6))
+                                }
                             }
                         }
                     },
