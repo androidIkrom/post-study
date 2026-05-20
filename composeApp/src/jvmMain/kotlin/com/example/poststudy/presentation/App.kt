@@ -8,7 +8,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.*
 import androidx.compose.ui.unit.dp
 import com.example.poststudy.data.local.DatabaseHelper
 import com.example.poststudy.data.network.NetworkManager
@@ -17,12 +16,35 @@ import com.example.poststudy.data.util.PptConverter
 import com.example.poststudy.data.util.TestParser
 import com.example.poststudy.domain.model.*
 import com.example.poststudy.presentation.theme.PostStudyTheme
-import com.example.poststudy.presentation.ui.*
+import com.example.poststudy.presentation.ui.screens.admin.ExamSettingsScreen
 import com.example.poststudy.presentation.ui.components.HelpIcon
 import com.example.poststudy.presentation.ui.components.PostStudyDialog
+import com.example.poststudy.presentation.ui.screens.admin.ExamSelectionScreen
+import com.example.poststudy.presentation.ui.screens.admin.HistoryScreen
+import com.example.poststudy.presentation.ui.screens.admin.LessonSelectionScreen
+import com.example.poststudy.presentation.ui.screens.admin.LoginScreen
+import com.example.poststudy.presentation.ui.screens.admin.ReadmeScreen
+import com.example.poststudy.presentation.ui.screens.admin.SettingsScreen
+import com.example.poststudy.presentation.ui.screens.admin.TeacherHomeScreen
+import com.example.poststudy.presentation.ui.screens.admin.TeacherIntroScreen
+import com.example.poststudy.presentation.ui.screens.admin.MonitoringScreen
+import com.example.poststudy.presentation.ui.screens.intro.InfoScreen
+import com.example.poststudy.presentation.ui.screens.intro.RoleSelectionScreen
+import com.example.poststudy.presentation.ui.screens.intro.SplashScreen
+import com.example.poststudy.presentation.ui.screens.groups.*
+import com.example.poststudy.presentation.ui.screens.network.NetworkConnectScreen
+import com.example.poststudy.presentation.ui.screens.student.ResultScreen
+import com.example.poststudy.presentation.ui.screens.student.SlideShowScreen
+import com.example.poststudy.presentation.ui.screens.student.StudentHomeScreen
+import com.example.poststudy.presentation.ui.screens.student.StudentIntroScreen
+import com.example.poststudy.presentation.ui.screens.student.TestScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.awt.image.BufferedImage
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.util.*
+import javax.imageio.ImageIO
 
 @Composable
 fun App() {
@@ -40,6 +62,9 @@ fun App() {
     
     var isLoading by remember { mutableStateOf(false) }
     var studentName by remember { mutableStateOf("") }
+    var currentStudentId by remember { mutableStateOf<Int?>(null) }
+    var currentGroupId by remember { mutableStateOf<Int?>(null) }
+    
     var currentLessonTitle by remember { mutableStateOf("Tezkor sessiya") }
     var currentSessionMode by remember { mutableStateOf(LessonMode.ReAppropriation) }
 
@@ -67,18 +92,20 @@ fun App() {
                                 if (role == UserRole.Teacher) {
                                     currentScreen = Screen.Login
                                 } else {
+                                    studentName = "" // Reset student name when choosing role
                                     currentScreen = Screen.StudentHome
                                 }
                             },
                             onJoinNetwork = {
                                 selectedRole = UserRole.Student
                                 isNetworkMode = true
+                                studentName = "" // Reset student name
                                 currentScreen = Screen.NetworkConnect
                             }
                         )
                         HelpIcon(
                             title = "Rolni tanlash",
-                            helpText = "PostStudy-ga xush kelibsiz! Darslarni boshqarish uchun 'O'qituvchi' yoki test topshirish uchun 'Talaba' rolini tanlang.",
+                            helpText = "BreakPointga xush kelibsiz! Darslarni boshqarish uchun 'Admin' yoki test topshirish uchun 'Tinglovchi' rolini tanlang.",
                             modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
                         )
                     }
@@ -91,29 +118,49 @@ fun App() {
                                 slideTimer = session.slideTimerSeconds
                                 testTimer = session.testTimerSeconds
                                 currentSessionMode = session.mode
-                                currentScreen = Screen.StudentIntro
+                                currentScreen = Screen.GroupSelection
                             },
                             onBack = { currentScreen = Screen.RoleSelection }
                         )
                         HelpIcon(
                             title = "Tarmoqqa ulanish",
-                            helpText = "O'qituvchi kompyuteridagi IP manzilni kiriting va 'Ulanish' tugmasini bosing.",
+                            helpText = "Admin kompyuteridagi IP manzilni kiriting va 'Ulanish' tugmasini bosing.",
                             modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
                         )
                     }
+                    is Screen.GroupSelection -> GroupSelectionScreen(
+                        serverIp = serverIp,
+                        onGroupSelected = { group ->
+                            currentGroupId = group.id
+                            currentScreen = Screen.StudentSelection(group)
+                        },
+                        onBack = { currentScreen = Screen.NetworkConnect }
+                    )
+                    is Screen.StudentSelection -> StudentSelectionScreen(
+                        serverIp = serverIp,
+                        group = screen.group,
+                        onStudentSelected = { student ->
+                            studentName = student.name
+                            currentStudentId = student.id
+                            currentScreen = Screen.StudentIntro
+                        },
+                        onBack = { currentScreen = Screen.GroupSelection }
+                    )
                     is Screen.StudentHome -> Box {
                         StudentHomeScreen(
-                            onNavigateToPreparation = { currentScreen = Screen.PreparationLessonSelection },
-                            onNavigateToTest = { 
+                            onNavigateToPreparation = {
+                                currentScreen = Screen.PreparationLessonSelection
+                            },
+                            onNavigateToTest = {
                                 isLoading = true
                                 isPreparationMode = false
-                                currentScreen = Screen.StudentIntro 
+                                currentScreen = Screen.StudentIntro
                             },
                             onBack = { currentScreen = Screen.RoleSelection }
                         )
                         HelpIcon(
-                            title = "Talaba asosiysi",
-                            helpText = "Mavjud darslarni o'rganish uchun 'Tayyorgarlik' yoki o'qituvchi tomonidan belgilangan testni topshirish uchun 'Test sessiyasi'ni tanlang.",
+                            title = "Tinglovchi asosiysi",
+                            helpText = "Mavjud darslarni o'rganish uchun 'Tayyorgarlik' yoki pedagog tomonidan belgilangan testni topshirish uchun 'Test sessiyasi'ni tanlang.",
                             modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
                         )
                     }
@@ -156,18 +203,39 @@ fun App() {
                         }
                     }
                     is Screen.Login -> LoginScreen(
-                        onLoginSuccess = { 
+                        onLoginSuccess = {
                             // Start server when teacher logs in
                             NetworkManager.startServer(
                                 getSession = {
                                     val s = DatabaseHelper.getSettings()
-                                    val qList = TestParser.parseTest(s.testPath).questions
-                                    val count = if (s.questionsPerStudent > 0) minOf(s.questionsPerStudent, qList.size) else qList.size
+                                    val qList = try { TestParser.parseTest(s.testPath).questions } catch(e: Exception) { emptyList() }
+                                    val count = if (s.questionsPerStudent > 0) minOf(
+                                        s.questionsPerStudent,
+                                        qList.size
+                                    ) else qList.size
+
+                                    val slidesEncoded =
+                                        if (s.mode == LessonMode.ReAppropriation && s.presentationPath.isNotBlank()) {
+                                            try {
+                                                val imgs = PptConverter.convertSlidesToImages(s.presentationPath)
+                                                imgs.map { img ->
+                                                    val baos = ByteArrayOutputStream()
+                                                    // Use JPG with quality to reduce size significantly
+                                                    ImageIO.write(img, "jpg", baos)
+                                                    Base64.getEncoder().encodeToString(baos.toByteArray())
+                                                }
+                                            } catch (e: Exception) {
+                                                e.printStackTrace()
+                                                emptyList()
+                                            }
+                                        } else emptyList()
+
                                     SessionData(
                                         title = s.activeSessionTitle.ifBlank { "Dars" },
                                         questions = qList.shuffled().take(count).map { q ->
                                             val indexedOptions = q.options.withIndex().shuffled()
-                                            val newCorrectIndex = indexedOptions.indexOfFirst { it.index == q.correctIndex }
+                                            val newCorrectIndex =
+                                                indexedOptions.indexOfFirst { it.index == q.correctIndex }
                                             q.copy(
                                                 options = indexedOptions.map { it.value },
                                                 correctIndex = newCorrectIndex
@@ -175,14 +243,15 @@ fun App() {
                                         },
                                         slideTimerSeconds = s.slideTimerSeconds,
                                         testTimerSeconds = s.testTimerSeconds,
-                                        mode = s.mode
+                                        mode = s.mode,
+                                        encodedSlides = slidesEncoded
                                     )
                                 },
                                 onRecordReceived = { record ->
                                     DatabaseHelper.saveExamRecord(record)
                                 }
                             )
-                            currentScreen = Screen.TeacherIntro 
+                            currentScreen = Screen.TeacherIntro
                         },
                         onBack = { currentScreen = Screen.RoleSelection }
                     )
@@ -195,14 +264,24 @@ fun App() {
                             onNavigateToLessons = { currentScreen = Screen.LessonSelection },
                             onNavigateToExam = { currentScreen = Screen.ExamSelection },
                             onNavigateToHistory = { currentScreen = Screen.History },
+                            onNavigateToMonitoring = { currentScreen = Screen.Monitoring },
+                            onNavigateToGroups = { currentScreen = Screen.Groups },
                             onBack = { currentScreen = Screen.RoleSelection }
                         )
                         HelpIcon(
-                            title = "O'qituvchi asosiysi",
-                            helpText = "Bu yerda siz darslarni boshqarishingiz, yangi imtihonlar yaratishingiz va talabalar natijalari tarixini ko'rishingiz mumkin.",
+                            title = "Admin asosiysi",
+                            helpText = "Bu yerda siz darslarni boshqarishingiz, yangi imtihonlar yaratishingiz va tinglovchilar natijalari tarixini ko'rishingiz mumkin.",
                             modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
                         )
                     }
+                    is Screen.Groups -> GroupManagementScreen(
+                        onGroupSelected = { group -> currentScreen = Screen.GroupDetails(group) },
+                        onBack = { currentScreen = Screen.TeacherHome }
+                    )
+                    is Screen.GroupDetails -> StudentListScreen(
+                        group = screen.group,
+                        onBack = { currentScreen = Screen.Groups }
+                    )
                     is Screen.ExamSelection -> Box {
                         ExamSelectionScreen(
                             onExamSelected = { exam ->
@@ -289,10 +368,16 @@ fun App() {
                                             slideTimer = session.slideTimerSeconds
                                             testTimer = session.testTimerSeconds
                                             currentSessionMode = session.mode
-                                            if (currentSessionMode == LessonMode.ReAppropriation) {
-                                                // Note: Files aren't shared via network yet, but metadata is.
-                                                // For a full fix, we'd need to serve files or assume they are shared.
-                                                // Keeping it as is for now.
+                                            
+                                            if (currentSessionMode == LessonMode.ReAppropriation && session.encodedSlides.isNotEmpty()) {
+                                                slides = session.encodedSlides.mapNotNull { base64 ->
+                                                    try {
+                                                        val bytes = Base64.getDecoder().decode(base64)
+                                                        ImageIO.read(ByteArrayInputStream(bytes))
+                                                    } catch (e: Exception) {
+                                                        null
+                                                    }
+                                                }
                                             } else {
                                                 slides = emptyList()
                                             }
@@ -351,7 +436,7 @@ fun App() {
                                     }
                                 )
                             }
-                            
+
                             StudentIntroScreen(
                                 title = currentLessonTitle,
                                 totalSlides = slides.size,
@@ -405,15 +490,17 @@ fun App() {
                             onFinished = { answers, spent ->
                                 userAnswers = answers
                                 timeSpent = spent
-                                
+
                                 // Save Exam Record
-                                val correctCount = questions.zip(answers).count { it.first.correctIndex == it.second }
-                                val wrongDetails = questions.zip(answers).filter { it.first.correctIndex != it.second }
-                                    .joinToString("\n\n") { (q, a) -> 
+                                val correctCount = questions.zip(answers)
+                                    .count { it.first.correctIndex == it.second }
+                                val wrongDetails = questions.zip(answers)
+                                    .filter { it.first.correctIndex != it.second }
+                                    .joinToString("\n\n") { (q, a) ->
                                         "S: ${q.text}\nTo'g'ri javob: ${q.options[q.correctIndex]}\nTanlangan javob: ${a?.let { q.options[it] } ?: "O'tkazib yuborildi"}"
                                     }
-                                
-                                DatabaseHelper.saveExamRecord(ExamRecord(
+
+                                val record = ExamRecord(
                                     studentName = if (studentName.isBlank()) "Anonim" else studentName,
                                     lessonTitle = currentLessonTitle,
                                     totalQuestions = questions.size,
@@ -421,24 +508,18 @@ fun App() {
                                     wrongAnswers = questions.size - correctCount,
                                     wrongDetails = wrongDetails,
                                     timeSpentSeconds = spent,
-                                    timestamp = System.currentTimeMillis()
-                                ))
+                                    timestamp = System.currentTimeMillis(),
+                                    groupId = currentGroupId,
+                                    studentId = currentStudentId
+                                )
+                                DatabaseHelper.saveExamRecord(record)
 
                                 if (isNetworkMode) {
                                     Thread {
-                                        NetworkManager.submitResult(serverIp, record = ExamRecord(
-                                            studentName = if (studentName.isBlank()) "Anonim" else studentName,
-                                            lessonTitle = currentLessonTitle,
-                                            totalQuestions = questions.size,
-                                            correctAnswers = correctCount,
-                                            wrongAnswers = questions.size - correctCount,
-                                            wrongDetails = wrongDetails,
-                                            timeSpentSeconds = spent,
-                                            timestamp = System.currentTimeMillis()
-                                        ))
+                                        NetworkManager.submitResult(serverIp, record = record)
                                     }.start()
                                 }
-                                
+
                                 currentScreen = Screen.Result
                             },
                             onBack = {
@@ -460,6 +541,9 @@ fun App() {
                     is Screen.History -> {
                         HistoryScreen(onBack = { currentScreen = Screen.TeacherHome })
                     }
+                    is Screen.Monitoring -> {
+                        MonitoringScreen(onBack = { currentScreen = Screen.TeacherHome })
+                    }
                 }
             }
         }
@@ -471,23 +555,31 @@ fun NameInputDialog(onNameEntered: (String) -> Unit, onDismiss: () -> Unit) {
     var name by remember { mutableStateOf("") }
     PostStudyDialog(
         onDismissRequest = onDismiss,
-        title = "Talabaning ismi",
+        title = "Tinglovchi ismi",
         text = "Iltimos, sessiyani boshlash uchun to'liq ismingizni kiriting. Bu natijalaringizni saqlash uchun ishlatiladi.",
         confirmText = "Sessiyani boshlash",
         onConfirm = { if (name.isNotBlank()) onNameEntered(name) },
         content = {
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("To'liq ism") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF6366F1),
-                    focusedLabelColor = Color(0xFF6366F1)
+            Column(horizontalAlignment = Alignment.End) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { if (it.length <= 22) name = it },
+                    label = { Text("To'liq ism") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF6366F1),
+                        focusedLabelColor = Color(0xFF6366F1)
+                    )
                 )
-            )
+                Text(
+                    text = "${name.length} / 22",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (name.length == 22) Color.Red else Color.Gray,
+                    modifier = Modifier.padding(top = 4.dp, end = 8.dp)
+                )
+            }
         }
     )
 }

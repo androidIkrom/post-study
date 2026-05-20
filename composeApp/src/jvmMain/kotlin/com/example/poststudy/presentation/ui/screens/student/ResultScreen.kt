@@ -1,6 +1,7 @@
-package com.example.poststudy.presentation.ui
+package com.example.poststudy.presentation.ui.screens.student
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -74,7 +75,7 @@ fun ResultScreen(
                     title = {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            "Natijalar Tahlili",
+                            "Natijalar tahlili",
                             fontWeight = FontWeight.Black,
                             color = Color(0xFF1E293B)
                         )
@@ -112,7 +113,7 @@ fun ResultScreen(
                         shape = AppDesign.CardShape,
                         colors = CardDefaults.cardColors(containerColor = Color.White),
                         elevation = CardDefaults.cardElevation(defaultElevation = 20.dp),
-                        border = androidx.compose.foundation.BorderStroke(
+                        border = BorderStroke(
                             4.dp, scoreColor.copy(alpha = 0.4f)
                         )
                     ) {
@@ -165,7 +166,7 @@ fun ResultScreen(
                             Surface(
                                 color = Color(0xFFF1F5F9),
                                 shape = CircleShape,
-                                border = androidx.compose.foundation.BorderStroke(
+                                border = BorderStroke(
                                     2.dp, Color(0xFFE2E8F0)
                                 )
                             ) {
@@ -230,7 +231,7 @@ fun ResultScreen(
                             shape = AppDesign.CardShape,
                             colors = CardDefaults.cardColors(containerColor = Color.White),
                             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                            border = androidx.compose.foundation.BorderStroke(
+                            border = BorderStroke(
                                 3.dp, Color(0xFFEF4444).copy(alpha = 0.3f)
                             )
                         ) {
@@ -240,7 +241,7 @@ fun ResultScreen(
                                         color = Color(0xFFEF4444).copy(alpha = 0.1f),
                                         shape = CircleShape,
                                         modifier = Modifier.size(48.dp),
-                                        border = androidx.compose.foundation.BorderStroke(
+                                        border = BorderStroke(
                                             3.dp, Color(0xFFEF4444)
                                         )
                                     ) {
@@ -311,7 +312,7 @@ fun ResultDetailBox(label: String, text: String, color: Color, backgroundColor: 
         color = backgroundColor,
         shape = AppDesign.ComponentShape,
         modifier = Modifier.fillMaxWidth(),
-        border = androidx.compose.foundation.BorderStroke(2.dp, color.copy(alpha = 0.2f))
+        border = BorderStroke(2.dp, color.copy(alpha = 0.2f))
     ) {
         Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(

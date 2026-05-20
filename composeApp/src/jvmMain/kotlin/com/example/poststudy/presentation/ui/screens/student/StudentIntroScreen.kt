@@ -1,10 +1,10 @@
-package com.example.poststudy.presentation.ui
+package com.example.poststudy.presentation.ui.screens.student
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -24,9 +24,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.poststudy.domain.model.LessonMode
 import com.example.poststudy.presentation.theme.AppDesign
+import com.example.poststudy.presentation.ui.components.hoverEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -105,11 +107,11 @@ fun StudentIntroScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Card(
-                    modifier = Modifier.widthIn(max = 650.dp).padding(bottom = 32.dp),
+                    modifier = Modifier.widthIn(max = 650.dp).padding(bottom = 32.dp).hoverEffect(),
                     shape = AppDesign.CardShape,
                     colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
                     elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
-                    border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF4F46E5).copy(alpha = 0.2f))
+                    border = BorderStroke(2.dp, Color(0xFF4F46E5).copy(alpha = 0.2f))
                 ) {
                     Column(
                         modifier = Modifier.padding(48.dp),
@@ -138,7 +140,7 @@ fun StudentIntroScreen(
                                 "Imtihonga tayyorlaning. Bu sizning bilimingizni bevosita tekshirishdir.",
                             style = MaterialTheme.typography.bodyLarge,
                             color = Color(0xFF64748B),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            textAlign = TextAlign.Center,
                             fontWeight = FontWeight.Medium
                         )
 
@@ -173,7 +175,8 @@ fun StudentIntroScreen(
                             onClick = onStart,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(64.dp),
+                                .height(64.dp)
+                                .hoverEffect(),
                             shape = AppDesign.ComponentShape,
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4F46E5)),
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
@@ -200,7 +203,7 @@ fun IntroRow(
     Surface(
         color = Color(0xFFF8FAFC),
         shape = AppDesign.ComponentShape,
-        border = androidx.compose.foundation.BorderStroke(2.dp, color.copy(alpha = 0.3f))
+        border = BorderStroke(2.dp, color.copy(alpha = 0.3f))
     ) {
         Row(
             modifier = Modifier.padding(20.dp).fillMaxWidth(),

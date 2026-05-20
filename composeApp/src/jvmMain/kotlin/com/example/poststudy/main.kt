@@ -35,7 +35,7 @@ fun main() = application {
             NetworkManager.stopServer()
             exitApplication()
         },
-        title = "PostStudy",
+        title = "BreakPoint",
         state = windowState,
         undecorated = true, // This makes the window match our UI perfectly
         icon = painterResource(Res.drawable.icon)
@@ -63,7 +63,7 @@ fun main() = application {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "PostStudy",
+                            text = "BreakPoint",
                             style = MaterialTheme.typography.labelLarge,
                             color = Color.White,
                             fontWeight = androidx.compose.ui.text.font.FontWeight.Black

@@ -1,5 +1,6 @@
-package com.example.poststudy.presentation.ui
+package com.example.poststudy.presentation.ui.screens.student
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -172,7 +173,7 @@ fun SlideShowScreen(
                         modifier = Modifier.height(60.dp).width(180.dp),
                         shape = RoundedCornerShape(20.dp),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.3f))
+                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f))
                     ) {
                         Text("Oldingi", fontWeight = FontWeight.Bold)
                     }

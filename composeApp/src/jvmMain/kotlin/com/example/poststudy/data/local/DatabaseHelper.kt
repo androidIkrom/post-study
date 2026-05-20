@@ -1,18 +1,16 @@
 package com.example.poststudy.data.local
 
 import com.example.poststudy.domain.model.*
+import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.security.MessageDigest
 
-// We rename the tables or add a suffix if we want to "reset" due to schema mismatch easily in SQLite 
-// Or we can just drop and recreate for development.
 object Users : Table("users_v2") {
     val id = integer("id").autoIncrement()
     val username = varchar("username", 50).uniqueIndex()
     val password = varchar("password", 64)
-
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -25,7 +23,6 @@ object SettingsTable : Table("settings_v4") {
     val mode = enumerationByName("mode", 20, LessonMode::class).default(LessonMode.ReAppropriation)
     val activeSessionTitle = varchar("active_session_title", 255).default("")
     val questionsPerStudent = integer("questions_per_student").default(0)
-
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -34,10 +31,9 @@ object LessonsTable : Table("lessons_v2") {
     val title = varchar("title", 255)
     val presentationPath = text("presentation_path")
     val testPath = text("test_path")
-    val slideTimerMinutes = integer("slide_timer_minutes") // Changed to minutes
-    val testTimerMinutes = integer("test_timer_minutes")   // Changed to minutes
+    val slideTimerMinutes = integer("slide_timer_minutes")
+    val testTimerMinutes = integer("test_timer_minutes")
     val mode = enumerationByName("mode", 20, LessonMode::class).default(LessonMode.ReAppropriation)
-
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -47,11 +43,10 @@ object ExamsTable : Table("exams_v1") {
     val testPath = text("test_path")
     val testTimerMinutes = integer("test_timer_minutes")
     val questionsPerStudent = integer("questions_per_student")
-
     override val primaryKey = PrimaryKey(id)
 }
 
-object ExamRecordsTable : Table("exam_records_v3") {
+object ExamRecordsTable : Table("exam_records_v4") {
     val id = integer("id").autoIncrement()
     val studentName = varchar("student_name", 255)
     val lessonTitle = varchar("lesson_title", 255)
@@ -60,14 +55,24 @@ object ExamRecordsTable : Table("exam_records_v3") {
     val wrongAnswers = integer("wrong_answers")
     val wrongDetails = text("wrong_details")
     val timeSpentSeconds = integer("time_spent_seconds").default(0)
-    val timestamp = long("timestamp") // Stores full date/time
-
+    val timestamp = long("timestamp")
+    val groupId = integer("group_id").nullable()
+    val studentId = integer("student_id").nullable()
     override val primaryKey = PrimaryKey(id)
+}
+
+object GroupsTable : IntIdTable("groups_v1") {
+    val name = varchar("name", 255)
+}
+
+object StudentsTable : IntIdTable("students_v1") {
+    val name = varchar("name", 255)
+    val groupId = reference("group_id", GroupsTable)
 }
 
 object DatabaseHelper {
     fun init() {
-        val dbPath = System.getProperty("user.home") + "/.poststudy/poststudy_v3.db"
+        val dbPath = System.getProperty("user.home") + "/.breakpoint/breakpoint_v1.db"
         val dbFile = java.io.File(dbPath)
         if (!dbFile.parentFile.exists()) {
             dbFile.parentFile.mkdirs()
@@ -75,8 +80,14 @@ object DatabaseHelper {
         
         Database.connect("jdbc:sqlite:$dbPath", "org.sqlite.JDBC")
         transaction {
-            SchemaUtils.create(Users, SettingsTable, LessonsTable, ExamsTable, ExamRecordsTable)
+            SchemaUtils.create(Users, SettingsTable, LessonsTable, ExamsTable, ExamRecordsTable, GroupsTable, StudentsTable)
             
+            if (GroupsTable.selectAll().count() == 0L) {
+                GroupsTable.insert {
+                    it[name] = "Guruh 1"
+                }
+            }
+
             if (SettingsTable.selectAll().count() == 0L) {
                 SettingsTable.insert {
                     it[SettingsTable.presentationPath] = ""
@@ -248,6 +259,8 @@ object DatabaseHelper {
                 it[wrongDetails] = record.wrongDetails
                 it[timeSpentSeconds] = record.timeSpentSeconds
                 it[timestamp] = record.timestamp
+                it[groupId] = record.groupId
+                it[studentId] = record.studentId
             }
         }
     }
@@ -263,7 +276,9 @@ object DatabaseHelper {
                 wrongAnswers = row[ExamRecordsTable.wrongAnswers],
                 wrongDetails = row[ExamRecordsTable.wrongDetails],
                 timeSpentSeconds = row[ExamRecordsTable.timeSpentSeconds],
-                timestamp = row[ExamRecordsTable.timestamp]
+                timestamp = row[ExamRecordsTable.timestamp],
+                groupId = row[ExamRecordsTable.groupId],
+                studentId = row[ExamRecordsTable.studentId]
             )
         }
     }
@@ -277,6 +292,93 @@ object DatabaseHelper {
     fun clearAllExamRecords() {
         transaction {
             ExamRecordsTable.deleteAll()
+        }
+    }
+
+    // --- Groups API ---
+
+    fun getAllGroups(): List<Group> = transaction {
+        GroupsTable.selectAll().map { Group(it[GroupsTable.id].value, it[GroupsTable.name]) }
+    }
+
+    fun addGroup(name: String): Int = transaction {
+        GroupsTable.insertAndGetId { it[GroupsTable.name] = name }.value
+    }
+
+    fun updateGroup(group: Group) = transaction {
+        GroupsTable.update({ GroupsTable.id eq group.id }) { it[name] = group.name }
+    }
+
+    fun deleteGroup(id: Int) = transaction {
+        GroupsTable.deleteWhere { GroupsTable.id eq id }
+    }
+
+    // --- Students API ---
+
+    fun getStudentsByGroup(groupId: Int): List<Student> = transaction {
+        StudentsTable.selectAll().where { StudentsTable.groupId eq groupId }
+            .map { Student(it[StudentsTable.id].value, it[StudentsTable.name], it[StudentsTable.groupId].value) }
+    }
+
+    fun addStudent(name: String, groupId: Int): Int = transaction {
+        StudentsTable.insertAndGetId {
+            it[StudentsTable.name] = name
+            it[StudentsTable.groupId] = groupId
+        }.value
+    }
+
+    fun deleteStudent(id: Int) = transaction {
+        StudentsTable.deleteWhere { StudentsTable.id eq id }
+    }
+
+    fun getStudentRecords(studentId: Int): List<ExamRecord> = transaction {
+        ExamRecordsTable.selectAll().where { ExamRecordsTable.studentId eq studentId }
+            .orderBy(ExamRecordsTable.timestamp, SortOrder.DESC)
+            .map { row ->
+                ExamRecord(
+                    id = row[ExamRecordsTable.id],
+                    studentName = row[ExamRecordsTable.studentName],
+                    lessonTitle = row[ExamRecordsTable.lessonTitle],
+                    totalQuestions = row[ExamRecordsTable.totalQuestions],
+                    correctAnswers = row[ExamRecordsTable.correctAnswers],
+                    wrongAnswers = row[ExamRecordsTable.wrongAnswers],
+                    wrongDetails = row[ExamRecordsTable.wrongDetails],
+                    timeSpentSeconds = row[ExamRecordsTable.timeSpentSeconds],
+                    timestamp = row[ExamRecordsTable.timestamp],
+                    groupId = row[ExamRecordsTable.groupId],
+                    studentId = row[ExamRecordsTable.studentId]
+                )
+            }
+    }
+
+    fun getGroupRecords(groupId: Int): List<ExamRecord> = transaction {
+        ExamRecordsTable.selectAll().where { ExamRecordsTable.groupId eq groupId }
+            .orderBy(ExamRecordsTable.timestamp, SortOrder.DESC)
+            .map { row ->
+                ExamRecord(
+                    id = row[ExamRecordsTable.id],
+                    studentName = row[ExamRecordsTable.studentName],
+                    lessonTitle = row[ExamRecordsTable.lessonTitle],
+                    totalQuestions = row[ExamRecordsTable.totalQuestions],
+                    correctAnswers = row[ExamRecordsTable.correctAnswers],
+                    wrongAnswers = row[ExamRecordsTable.wrongAnswers],
+                    wrongDetails = row[ExamRecordsTable.wrongDetails],
+                    timeSpentSeconds = row[ExamRecordsTable.timeSpentSeconds],
+                    timestamp = row[ExamRecordsTable.timestamp],
+                    groupId = row[ExamRecordsTable.groupId],
+                    studentId = row[ExamRecordsTable.studentId]
+                )
+            }
+    }
+
+    fun getAllGroupsWithStats(): List<Pair<Group, Int>> = transaction {
+        val groups = getAllGroups()
+        groups.map { group ->
+            val records = getGroupRecords(group.id)
+            val avg = if (records.isNotEmpty()) {
+                records.map { (it.correctAnswers.toFloat() / it.totalQuestions * 100).toInt() }.average().toInt()
+            } else 0
+            group to avg
         }
     }
 }

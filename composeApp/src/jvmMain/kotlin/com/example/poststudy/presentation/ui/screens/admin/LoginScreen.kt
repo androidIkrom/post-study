@@ -1,20 +1,20 @@
-package com.example.poststudy.presentation.ui
+package com.example.poststudy.presentation.ui.screens.admin
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.poststudy.data.local.DatabaseHelper
 import com.example.poststudy.presentation.theme.AppDesign
@@ -104,14 +104,14 @@ fun LoginScreen(
                     shape = AppDesign.CardShape,
                     elevation = CardDefaults.cardElevation(defaultElevation = 24.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = androidx.compose.foundation.BorderStroke(3.dp, Color(0xFF10B981).copy(alpha = 0.3f))
+                    border = BorderStroke(3.dp, Color(0xFF10B981).copy(alpha = 0.3f))
                 ) {
                     Column(
                         modifier = Modifier.padding(48.dp).fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = if (isRegistered) "Xush Kelibsiz" else "Hisob Yaratish",
+                            text = if (isRegistered) "Xush kelibsiz" else "Hisob yaratish",
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Black,
                             color = Color(0xFF065F46)
@@ -129,7 +129,7 @@ fun LoginScreen(
                             Surface(
                                 color = Color(0xFFFEF2F2),
                                 shape = AppDesign.ComponentShape,
-                                border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFFEF4444).copy(alpha = 0.5f)),
+                                border = BorderStroke(2.dp, Color(0xFFEF4444).copy(alpha = 0.5f)),
                                 modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp)
                             ) {
                                 Text(
@@ -138,7 +138,7 @@ fun LoginScreen(
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(16.dp),
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                    textAlign = TextAlign.Center
                                 )
                             }
                         }

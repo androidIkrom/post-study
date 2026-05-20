@@ -1,9 +1,9 @@
-package com.example.poststudy.presentation.ui
+package com.example.poststudy.presentation.ui.screens.admin
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -12,7 +12,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.font.FontWeight
@@ -145,7 +144,7 @@ fun SettingsScreen(
                     shape = AppDesign.CardShape,
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
-                    border = androidx.compose.foundation.BorderStroke(3.dp, Color(0xFF10B981).copy(alpha = 0.3f))
+                    border = BorderStroke(3.dp, Color(0xFF10B981).copy(alpha = 0.3f))
                 ) {
                     Column(modifier = Modifier.padding(56.dp), verticalArrangement = Arrangement.spacedBy(32.dp)) {
                         SettingsSection(title = "Dars nomi") {
@@ -207,7 +206,7 @@ fun SettingsScreen(
                                 Surface(
                                     color = Color(0xFFFFF7ED),
                                     shape = AppDesign.ComponentShape,
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF97316).copy(alpha = 0.3f)),
+                                    border = BorderStroke(1.dp, Color(0xFFF97316).copy(alpha = 0.3f)),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Column(modifier = Modifier.padding(12.dp)) {
@@ -304,7 +303,7 @@ fun ModeCard(
         modifier = modifier.height(120.dp),
         shape = AppDesign.ComponentShape,
         color = if (isSelected) Color(0xFFEEF2FF) else Color(0xFFF8FAFC),
-        border = if (isSelected) androidx.compose.foundation.BorderStroke(4.dp, Color(0xFF6366F1)) else androidx.compose.foundation.BorderStroke(2.dp, Color(0xFFE2E8F0)),
+        border = if (isSelected) BorderStroke(4.dp, Color(0xFF6366F1)) else BorderStroke(2.dp, Color(0xFFE2E8F0)),
         shadowElevation = if (isSelected) 8.dp else 0.dp
     ) {
         Column(

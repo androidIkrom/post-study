@@ -1,7 +1,8 @@
-package com.example.poststudy.presentation.ui
+package com.example.poststudy.presentation.ui.screens.intro
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -12,27 +13,41 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.poststudy.presentation.theme.AppDesign
+import com.example.poststudy.presentation.ui.components.hoverEffect
 import kotlinx.coroutines.delay
 
 @Composable
 fun InfoScreen(onContinue: () -> Unit) {
     var visible by remember { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() }
     
     LaunchedEffect(Unit) {
         delay(100)
         visible = true
+        focusRequester.requestFocus()
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppDesign.BackgroundGradient),
+            .background(AppDesign.BackgroundGradient)
+            .focusRequester(focusRequester)
+            .focusable() // Added focusable() to ensure the box can receive key events
+            .onPreviewKeyEvent {
+                if (it.key == Key.Enter && it.type == KeyEventType.KeyDown) {
+                    onContinue()
+                    true
+                } else false
+            },
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -49,14 +64,14 @@ fun InfoScreen(onContinue: () -> Unit) {
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "LOYIHA HAQIDA",
+                        text = "Loyiha haqida",
                         style = MaterialTheme.typography.displaySmall,
                         fontWeight = FontWeight.Black,
                         color = Color(0xFF064E3B)
                     )
                     
                     Text(
-                        text = "PostStudy — ta'lim sifatini oshirish uchun innovatsion yechim",
+                        text = "BreakPoint — ta'lim sifatini oshirish uchun innovatsion yechim",
                         style = MaterialTheme.typography.titleMedium,
                         color = Color(0xFF059669),
                         modifier = Modifier.padding(top = 8.dp),
@@ -73,21 +88,24 @@ fun InfoScreen(onContinue: () -> Unit) {
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
                     InfoRow(
+                        modifier = Modifier.hoverEffect(scale = 1.02f, yOffset = -5f),
                         icon = Icons.Default.Adjust,
                         title = "Loyihaning maqsadi",
-                        description = "O'quv jarayonini raqamlashtirish, bilimlarni nazorat qilishni avtomatlashtirish va o'qituvchi bilan talaba o'rtasidagi aloqani soddalashtirish."
+                        description = "O'quv jarayonini raqamlashtirish, bilimlarni nazorat qilishni avtomatlashtirish va pedagoglar bilan tinglovchilar o'rtasidagi aloqani soddalashtirish."
                     )
                     
                     InfoRow(
+                        modifier = Modifier.hoverEffect(scale = 1.02f, yOffset = -5f),
                         icon = Icons.Default.TaskAlt,
                         title = "Asosiy vazifalari",
                         description = "Dars materiallarini elektron shaklda taqdim etish, interaktiv testlar orqali baholash va natijalarni real vaqt rejimida tahlil qilish."
                     )
                     
                     InfoRow(
+                        modifier = Modifier.hoverEffect(scale = 1.02f, yOffset = -5f),
                         icon = Icons.Default.Computer,
                         title = "Qo'llanish sohalari",
-                        description = "Oliy va o'rta maxsus ta'lim muassasalari, o'quv markazlari hamda korporativ o'qitish tizimlarida foydalanish uchun mo'ljallangan."
+                        description = "Oliy harbiy ta'lim muassasalari o'qitish tizimlarida foydalanish uchun mo'ljallangan."
                     )
                 }
             }
@@ -100,7 +118,7 @@ fun InfoScreen(onContinue: () -> Unit) {
             ) {
                 Button(
                     onClick = onContinue,
-                    modifier = Modifier.width(300.dp).height(64.dp),
+                    modifier = Modifier.width(300.dp).height(64.dp).hoverEffect(),
                     shape = AppDesign.ComponentShape,
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
                 ) {
@@ -117,12 +135,13 @@ fun InfoScreen(onContinue: () -> Unit) {
 
 @Composable
 fun InfoRow(
+    modifier: Modifier = Modifier,
     icon: ImageVector,
     title: String,
     description: String
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(Color.White.copy(alpha = 0.6f), AppDesign.CardShape)
             .padding(24.dp),

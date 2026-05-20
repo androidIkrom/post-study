@@ -1,8 +1,8 @@
-package com.example.poststudy.presentation.ui
+package com.example.poststudy.presentation.ui.screens.network
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lan
@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.poststudy.data.network.NetworkManager
@@ -85,7 +86,7 @@ fun NetworkConnectScreen(
                     shape = AppDesign.CardShape,
                     elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = androidx.compose.foundation.BorderStroke(
+                    border = BorderStroke(
                         3.dp,
                         Color(0xFF6366F1).copy(alpha = 0.3f)
                     )
@@ -129,8 +130,13 @@ fun NetworkConnectScreen(
                         OutlinedTextField(
                             value = ipAddress,
                             onValueChange = { ipAddress = it; errorMessage = "" },
-                            label = { Text("masalan, 192.168.1.5") },
-                            modifier = Modifier.fillMaxWidth(),
+                            label = { Text("masalan, 197.181.1.5") },
+                            modifier = Modifier.fillMaxWidth().onPreviewKeyEvent { 
+                                if (it.key == Key.Enter && it.type == KeyEventType.KeyDown) {
+                                    connect()
+                                    true
+                                } else false
+                            },
                             shape = AppDesign.ComponentShape,
                             singleLine = true,
                             enabled = !isLoading,

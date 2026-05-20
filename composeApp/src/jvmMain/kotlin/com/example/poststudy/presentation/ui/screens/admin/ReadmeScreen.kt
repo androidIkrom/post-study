@@ -1,4 +1,4 @@
-package com.example.poststudy.presentation.ui
+package com.example.poststudy.presentation.ui.screens.admin
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,7 +66,7 @@ fun ReadmeScreen(onNext: () -> Unit, onBack: () -> Unit) {
                 CenterAlignedTopAppBar(
                     title = { 
                         Text(
-                            "PostStudy-dan foydalanish bo'yicha qo'llanma",
+                            "BreakPoint-dan foydalanish bo'yicha qo'llanma",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.ExtraBold,
                             color = Color.White
@@ -92,7 +93,7 @@ fun ReadmeScreen(onNext: () -> Unit, onBack: () -> Unit) {
                 
                 InfoCard(
                     title = "1. Bu qanday dastur?",
-                    content = "PostStudy o'quv materiallarini o'zlashtirishga yordam beradi. Taqdimotingizni yuklang, taymer asosida o'rganing va so'ngra bilimingizni darhol sinab ko'ring."
+                    content = "BreakPoint o'quv materiallarini o'zlashtirishga yordam beradi. Taqdimotingizni yuklang, taymer asosida o'rganing va so'ngra bilimingizni darhol sinab ko'ring."
                 )
 
                 InfoCard(
@@ -143,7 +144,7 @@ fun InfoCard(title: String, content: String) {
                 text = content,
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color(0xFF64748B),
-                lineHeight = androidx.compose.ui.unit.TextUnit.Unspecified // Keep default or set custom
+                lineHeight = TextUnit.Unspecified // Keep default or set custom
             )
         }
     }

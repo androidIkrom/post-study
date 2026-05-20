@@ -1,5 +1,6 @@
-package com.example.poststudy.presentation.ui
+package com.example.poststudy.presentation.ui.screens.admin
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -18,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import com.example.poststudy.data.local.DatabaseHelper
 import com.example.poststudy.data.util.TestParser
 import com.example.poststudy.domain.model.Exam
-import com.example.poststudy.domain.model.LessonMode
 import com.example.poststudy.presentation.theme.AppDesign
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.core.PickerMode
@@ -139,7 +139,7 @@ fun ExamSettingsScreen(
                     shape = AppDesign.CardShape,
                     elevation = CardDefaults.cardElevation(defaultElevation = 16.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = androidx.compose.foundation.BorderStroke(3.dp, Color(0xFF6366F1).copy(alpha = 0.2f))
+                    border = BorderStroke(3.dp, Color(0xFF6366F1).copy(alpha = 0.2f))
                 ) {
                     Column(modifier = Modifier.padding(48.dp)) {
                         if (errorMessage.isNotEmpty()) {
@@ -147,13 +147,13 @@ fun ExamSettingsScreen(
                                 color = Color(0xFFFEF2F2),
                                 shape = AppDesign.ComponentShape,
                                 modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp),
-                                border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFFEF4444).copy(alpha = 0.3f))
+                                border = BorderStroke(2.dp, Color(0xFFEF4444).copy(alpha = 0.3f))
                             ) {
                                 Text(errorMessage, color = Color(0xFFB91C1C), modifier = Modifier.padding(16.dp), fontWeight = FontWeight.Bold)
                             }
                         }
 
-                        Text("IMTIHON NOMI", style = MaterialTheme.typography.titleLarge, color = Color(0xFF6366F1), fontWeight = FontWeight.Black)
+                        Text("Imtihon nomi", style = MaterialTheme.typography.titleLarge, color = Color(0xFF6366F1), fontWeight = FontWeight.Black)
                         Spacer(Modifier.height(16.dp))
                         
                         OutlinedTextField(
@@ -170,7 +170,7 @@ fun ExamSettingsScreen(
 
                         Text("TEST MATERIALI", style = MaterialTheme.typography.titleLarge, color = Color(0xFF6366F1), fontWeight = FontWeight.Black)
                         Spacer(Modifier.height(16.dp))
-                        
+
                         FilePickerRow(
                             path = testPath,
                             label = "Word faylini tanlang (.doc, .docx)",
@@ -192,7 +192,7 @@ fun ExamSettingsScreen(
                             Surface(
                                 color = Color(0xFFFFF7ED),
                                 shape = AppDesign.ComponentShape,
-                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF97316).copy(alpha = 0.3f)),
+                                border = BorderStroke(1.dp, Color(0xFFF97316).copy(alpha = 0.3f)),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
@@ -206,7 +206,7 @@ fun ExamSettingsScreen(
 
                         Spacer(modifier = Modifier.height(48.dp))
 
-                        Text("IMTIHON QOIDALARI", style = MaterialTheme.typography.titleLarge, color = Color(0xFF6366F1), fontWeight = FontWeight.Black)
+                        Text("Imtihon qoidalari", style = MaterialTheme.typography.titleLarge, color = Color(0xFF6366F1), fontWeight = FontWeight.Black)
                         Spacer(Modifier.height(24.dp))
 
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
@@ -240,7 +240,7 @@ fun ExamSettingsScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1), contentColor = Color.White),
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = 12.dp)
                         ) {
-                            Text("IMTIHONNI SAQLASH", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                            Text("Imtihonni saqlash", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
                         }
                     }
                 }

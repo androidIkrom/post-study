@@ -1,5 +1,6 @@
-package com.example.poststudy.presentation.ui
+package com.example.poststudy.presentation.ui.screens.student
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -11,12 +12,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.poststudy.presentation.theme.AppDesign
+import com.example.poststudy.presentation.ui.components.hoverEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,7 +79,7 @@ fun StudentHomeScreen(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Xush kelibsiz, Tinglovchi",
+                    text = "Xush kelibsiz, tinglovchi",
                     style = MaterialTheme.typography.displaySmall,
                     color = Color(0xFF1E293B),
                     fontWeight = FontWeight.Black
@@ -105,7 +106,7 @@ fun StudentHomeScreen(
                     )
                     StudentHomeCard(
                         modifier = Modifier.weight(1f),
-                        title = "Bilim Testi",
+                        title = "Bilim testi",
                         subtitle = "O'zingizni sinab ko'ring",
                         icon = Icons.AutoMirrored.Filled.Assignment,
                         color = Color(0xFF10B981), // Emerald 500
@@ -122,17 +123,18 @@ fun StudentHomeCard(
     modifier: Modifier,
     title: String,
     subtitle: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     color: Color,
     onClick: () -> Unit
 ) {
     Surface(
         onClick = onClick,
         modifier = modifier
-            .height(220.dp),
+            .height(220.dp)
+            .hoverEffect(),
         shape = AppDesign.ComponentShape,
         color = Color.White,
-        border = androidx.compose.foundation.BorderStroke(3.dp, color),
+        border = BorderStroke(3.dp, color),
         shadowElevation = 8.dp
     ) {
         Column(

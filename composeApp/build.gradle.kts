@@ -48,19 +48,19 @@ compose.desktop {
     application {
         mainClass = "com.example.poststudy.MainKt"
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "PostStudy"
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb, TargetFormat.Exe)
+            packageName = "BreakPoint"
             packageVersion = "1.0.0"
-            vendor = "PostStudy Vendor"
-            copyright = "© 2024 PostStudy"
-            description = "Post Study"
+            vendor = "BreakPoint Vendor"
+            copyright = "© 2024 BreakPoint"
+            description = "BreakPoint"
 
             modules("java.sql", "java.naming", "java.desktop", "jdk.unsupported", "jdk.httpserver", "java.management", "java.xml", "java.logging")
 
             windows {
                 shortcut = true
                 menu = true
-                menuGroup = "PostStudy"
+                menuGroup = "BreakPoint"
                 iconFile.set(project.file("src/jvmMain/composeResources/drawable/icon.ico"))
                 upgradeUuid = "8a63c076-2146-45ef-8fa6-d90b4a020700"
                 perUserInstall = true

@@ -1,5 +1,6 @@
-package com.example.poststudy.presentation.ui
+package com.example.poststudy.presentation.ui.screens.student
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.font.FontWeight
@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.example.poststudy.domain.model.Question
 import com.example.poststudy.presentation.theme.AppDesign
 import com.example.poststudy.presentation.ui.components.HelpIcon
+import com.example.poststudy.presentation.ui.components.hoverEffect
 import com.example.poststudy.presentation.ui.components.PostStudyDialog
 import kotlinx.coroutines.delay
 
@@ -146,7 +147,7 @@ fun TestScreen(
                         Surface(
                             color = Color(0xFFEF4444), // Urgent Red
                             shape = AppDesign.ComponentShape,
-                            border = androidx.compose.foundation.BorderStroke(2.dp, Color.White.copy(alpha = 0.5f)),
+                            border = BorderStroke(2.dp, Color.White.copy(alpha = 0.5f)),
                             modifier = Modifier.padding(end = 16.dp),
                             shadowElevation = 8.dp
                         ) {
@@ -198,7 +199,7 @@ fun TestScreen(
                     shape = AppDesign.CardShape,
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
-                    border = androidx.compose.foundation.BorderStroke(3.dp, Color(0xFF6366F1).copy(alpha = 0.4f)) // Indigo border
+                    border = BorderStroke(3.dp, Color(0xFF6366F1).copy(alpha = 0.4f)) // Indigo border
                 ) {
                     Column(modifier = Modifier.padding(56.dp)) {
                         Text(
@@ -246,7 +247,7 @@ fun TestScreen(
                         modifier = Modifier.height(68.dp).width(220.dp),
                         shape = AppDesign.ComponentShape,
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF10B981)),
-                        border = androidx.compose.foundation.BorderStroke(3.dp, Color(0xFF10B981))
+                        border = BorderStroke(3.dp, Color(0xFF10B981))
                     ) {
                         Text("OLDINGI", fontWeight = FontWeight.Black, style = MaterialTheme.typography.titleMedium)
                     }
@@ -306,10 +307,10 @@ fun OptionCard(text: String, isSelected: Boolean, isHint: Boolean = false, onCli
     val displayText = if (isHint) "$text.." else text
 
     Surface(
-        modifier = Modifier.fillMaxWidth().clickable { onClick() },
+        modifier = Modifier.fillMaxWidth().hoverEffect(scale = 1.01f).clickable { onClick() },
         shape = AppDesign.ComponentShape,
         color = backgroundColor,
-        border = androidx.compose.foundation.BorderStroke(3.dp, borderColor)
+        border = BorderStroke(3.dp, borderColor)
     ) {
         Row(
             modifier = Modifier.padding(24.dp),

@@ -1,8 +1,7 @@
 package com.example.poststudy.data.network
 
-import com.example.poststudy.domain.model.ExamRecord
-import com.example.poststudy.domain.model.LessonMode
-import com.example.poststudy.domain.model.Question
+import com.example.poststudy.data.local.DatabaseHelper
+import com.example.poststudy.domain.model.*
 import com.google.gson.Gson
 import com.sun.net.httpserver.HttpServer
 import java.net.InetSocketAddress
@@ -13,7 +12,8 @@ data class SessionData(
     val questions: List<Question>,
     val slideTimerSeconds: Int,
     val testTimerSeconds: Int,
-    val mode: LessonMode
+    val mode: LessonMode,
+    val encodedSlides: List<String> = emptyList()
 )
 
 object NetworkManager {
@@ -73,6 +73,49 @@ object NetworkManager {
                     }
                 }
 
+                createContext("/groups") { exchange ->
+                    try {
+                        val groups = DatabaseHelper.getAllGroups()
+                        val response = gson.toJson(groups)
+                        val bytes = response.toByteArray(StandardCharsets.UTF_8)
+                        exchange.responseHeaders.add("Content-Type", "application/json")
+                        exchange.sendResponseHeaders(200, bytes.size.toLong())
+                        exchange.responseBody.use { it.write(bytes) }
+                    } catch (e: Exception) {
+                        exchange.sendResponseHeaders(500, -1)
+                    }
+                }
+
+                createContext("/students") { exchange ->
+                    try {
+                        val query = exchange.requestURI.query
+                        val groupId = query?.split("=")?.get(1)?.toIntOrNull() ?: -1
+                        val students = DatabaseHelper.getStudentsByGroup(groupId)
+                        val response = gson.toJson(students)
+                        val bytes = response.toByteArray(StandardCharsets.UTF_8)
+                        exchange.responseHeaders.add("Content-Type", "application/json")
+                        exchange.sendResponseHeaders(200, bytes.size.toLong())
+                        exchange.responseBody.use { it.write(bytes) }
+                    } catch (e: Exception) {
+                        exchange.sendResponseHeaders(500, -1)
+                    }
+                }
+
+                createContext("/create-student") { exchange ->
+                    try {
+                        if ("POST" == exchange.requestMethod) {
+                            val body = exchange.requestBody.bufferedReader(StandardCharsets.UTF_8).readText()
+                            val studentReq = gson.fromJson(body, Student::class.java)
+                            val id = DatabaseHelper.addStudent(studentReq.name, studentReq.groupId)
+                            val response = id.toString()
+                            exchange.sendResponseHeaders(200, response.length.toLong())
+                            exchange.responseBody.use { it.write(response.toByteArray()) }
+                        } else exchange.sendResponseHeaders(405, -1)
+                    } catch (e: Exception) {
+                        exchange.sendResponseHeaders(500, -1)
+                    }
+                }
+
                 createContext("/submit") { exchange ->
                     try {
                         if ("POST" == exchange.requestMethod) {
@@ -111,8 +154,8 @@ object NetworkManager {
         return try {
             val url = java.net.URL("http://$ip:$port/session")
             val connection = url.openConnection() as java.net.HttpURLConnection
-            connection.connectTimeout = 5000
-            connection.readTimeout = 5000
+            connection.connectTimeout = 10000 // 10s
+            connection.readTimeout = 30000    // 30s for large slide payloads
             connection.requestMethod = "GET"
             if (connection.responseCode == 200) {
                 val text = connection.inputStream.bufferedReader().readText()
@@ -120,6 +163,55 @@ object NetworkManager {
             } else null
         } catch (e: Exception) {
             e.printStackTrace()
+            null
+        }
+    }
+
+    fun fetchGroups(ip: String, port: Int = 8080): List<Group> {
+        return try {
+            val url = java.net.URL("http://$ip:$port/groups")
+            val connection = url.openConnection() as java.net.HttpURLConnection
+            connection.connectTimeout = 5000
+            connection.requestMethod = "GET"
+            if (connection.responseCode == 200) {
+                val text = connection.inputStream.bufferedReader().readText()
+                val type = object : com.google.gson.reflect.TypeToken<List<Group>>() {}.type
+                gson.fromJson(text, type)
+            } else emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    fun fetchStudents(ip: String, groupId: Int, port: Int = 8080): List<Student> {
+        return try {
+            val url = java.net.URL("http://$ip:$port/students?groupId=$groupId")
+            val connection = url.openConnection() as java.net.HttpURLConnection
+            connection.connectTimeout = 5000
+            connection.requestMethod = "GET"
+            if (connection.responseCode == 200) {
+                val text = connection.inputStream.bufferedReader().readText()
+                val type = object : com.google.gson.reflect.TypeToken<List<Student>>() {}.type
+                gson.fromJson(text, type)
+            } else emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    fun createStudentRemote(ip: String, name: String, groupId: Int, port: Int = 8080): Int? {
+        return try {
+            val url = java.net.URL("http://$ip:$port/create-student")
+            val connection = url.openConnection() as java.net.HttpURLConnection
+            connection.connectTimeout = 5000
+            connection.requestMethod = "POST"
+            connection.doOutput = true
+            val body = gson.toJson(Student(0, name, groupId))
+            connection.outputStream.use { it.write(body.toByteArray()) }
+            if (connection.responseCode == 200) {
+                connection.inputStream.bufferedReader().readText().toIntOrNull()
+            } else null
+        } catch (e: Exception) {
             null
         }
     }

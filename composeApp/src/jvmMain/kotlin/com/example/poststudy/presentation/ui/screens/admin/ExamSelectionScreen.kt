@@ -1,5 +1,6 @@
-package com.example.poststudy.presentation.ui
+package com.example.poststudy.presentation.ui.screens.admin
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -18,8 +19,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.poststudy.data.local.DatabaseHelper
 import com.example.poststudy.domain.model.Exam
-import com.example.poststudy.domain.model.LessonMode
 import com.example.poststudy.presentation.theme.AppDesign
+import com.example.poststudy.presentation.ui.components.hoverEffect
 import com.example.poststudy.presentation.ui.components.PostStudyDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,7 +67,7 @@ fun ExamSelectionScreen(
             containerColor = Color.Transparent,
             topBar = {
                 TopAppBar(
-                    title = { Text("Imtihonlar Ro'yxati", color = Color(0xFF065F46), fontWeight = FontWeight.Black) },
+                    title = { Text("Imtihonlar ro'yxati", color = Color(0xFF065F46), fontWeight = FontWeight.Black) },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Orqaga", tint = Color(0xFF065F46))
@@ -99,7 +100,7 @@ fun ExamSelectionScreen(
                             shape = AppDesign.ComponentShape,
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
                         ) {
-                            Text("BIRINCHI IMTIHONNI YARATISH", fontWeight = FontWeight.Black)
+                            Text("Bbirinchi imtihonni yaratish", fontWeight = FontWeight.Black)
                         }
                     }
                 }
@@ -133,10 +134,10 @@ fun ExamCard(
 ) {
     Surface(
         onClick = onSelect,
-        modifier = Modifier.fillMaxWidth().height(200.dp),
+        modifier = Modifier.fillMaxWidth().height(200.dp).hoverEffect(),
         shape = AppDesign.CardShape,
         color = Color.White,
-        border = androidx.compose.foundation.BorderStroke(3.dp, Color(0xFF6366F1).copy(alpha = 0.4f)),
+        border = BorderStroke(3.dp, Color(0xFF6366F1).copy(alpha = 0.4f)),
         shadowElevation = 12.dp
     ) {
         Column(

@@ -1,5 +1,6 @@
-package com.example.poststudy.presentation.ui
+package com.example.poststudy.presentation.ui.screens.intro
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -11,13 +12,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.poststudy.domain.model.UserRole
 import com.example.poststudy.presentation.theme.AppDesign
+import com.example.poststudy.presentation.ui.components.hoverEffect
 
 @Composable
 fun RoleSelectionScreen(
@@ -50,14 +51,14 @@ fun RoleSelectionScreen(
             shape = AppDesign.CardShape,
             elevation = CardDefaults.cardElevation(defaultElevation = 20.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
-            border = androidx.compose.foundation.BorderStroke(2.dp, Color(0xFF10B981).copy(alpha = 0.2f))
+            border = BorderStroke(2.dp, Color(0xFF10B981).copy(alpha = 0.2f))
         ) {
             Column(
                 modifier = Modifier.padding(64.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "PostStudy",
+                    text = "BreakPoint",
                     style = MaterialTheme.typography.displayMedium,
                     fontWeight = FontWeight.Black,
                     color = Color(0xFF059669) // Emerald 600
@@ -117,10 +118,10 @@ fun RoleSelectionCard(
 ) {
     Surface(
         onClick = onClick,
-        modifier = modifier.height(260.dp),
+        modifier = modifier.height(260.dp).hoverEffect(),
         shape = AppDesign.ComponentShape,
         color = Color.White,
-        border = androidx.compose.foundation.BorderStroke(3.dp, color),
+        border = BorderStroke(3.dp, color),
         shadowElevation = 8.dp
     ) {
         Column(

@@ -1,5 +1,6 @@
-package com.example.poststudy.presentation.ui
+package com.example.poststudy.presentation.ui.screens.admin
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -23,6 +24,7 @@ import com.example.poststudy.data.local.DatabaseHelper
 import com.example.poststudy.domain.model.Lesson
 import com.example.poststudy.domain.model.LessonMode
 import com.example.poststudy.presentation.theme.AppDesign
+import com.example.poststudy.presentation.ui.components.hoverEffect
 import com.example.poststudy.presentation.ui.components.PostStudyDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,7 +73,7 @@ fun LessonSelectionScreen(
             containerColor = Color.Transparent,
             topBar = {
                 TopAppBar(
-                    title = { Text(if (isTeacher) "Darslar Ro'yxati" else "Dars Tanlash", color = Color(0xFF065F46), fontWeight = FontWeight.Black) },
+                    title = { Text(if (isTeacher) "Darslar ro'yxati" else "Dars tanlash", color = Color(0xFF065F46), fontWeight = FontWeight.Black) },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Orqaga", tint = Color(0xFF065F46))
@@ -148,10 +150,10 @@ fun LessonCard(
 ) {
     Surface(
         onClick = onSelect,
-        modifier = Modifier.fillMaxWidth().height(200.dp),
+        modifier = Modifier.fillMaxWidth().height(200.dp).hoverEffect(),
         shape = AppDesign.CardShape,
         color = Color.White,
-        border = androidx.compose.foundation.BorderStroke(3.dp, Color(0xFF10B981).copy(alpha = 0.4f)),
+        border = BorderStroke(3.dp, Color(0xFF10B981).copy(alpha = 0.4f)),
         shadowElevation = 12.dp
     ) {
         Column(
@@ -223,7 +225,7 @@ fun InfoBadge(icon: ImageVector, text: String, color: Color) {
     Surface(
         color = color.copy(alpha = 0.1f),
         shape = CircleShape,
-        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = 0.3f))
+        border = BorderStroke(1.dp, color.copy(alpha = 0.3f))
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),

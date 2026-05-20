@@ -1,7 +1,8 @@
-package com.example.poststudy.presentation.ui
+package com.example.poststudy.presentation.ui.screens.intro
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -10,27 +11,41 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.poststudy.presentation.theme.AppDesign
+import com.example.poststudy.presentation.ui.components.hoverEffect
 import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(onContinue: () -> Unit) {
     var visible by remember { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() }
     
     LaunchedEffect(Unit) {
         delay(100)
         visible = true
+        focusRequester.requestFocus()
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppDesign.BackgroundGradient),
+            .background(AppDesign.BackgroundGradient)
+            .focusRequester(focusRequester)
+            .focusable() // Ensure it can catch Enter key
+            .onPreviewKeyEvent {
+                if (it.key == Key.Enter && it.type == KeyEventType.KeyDown) {
+                    onContinue()
+                    true
+                } else false
+            },
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -62,7 +77,7 @@ fun SplashScreen(onContinue: () -> Unit) {
                     Spacer(modifier = Modifier.height(24.dp))
                     
                     Text(
-                        text = "PostStudy",
+                        text = "BreakPoint",
                         style = MaterialTheme.typography.displayMedium,
                         fontWeight = FontWeight.Black,
                         color = Color(0xFF064E3B)
@@ -88,22 +103,22 @@ fun SplashScreen(onContinue: () -> Unit) {
                     horizontalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
                     InstructionCard(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).hoverEffect(),
                         icon = Icons.Default.Person,
-                        title = "Admin - o`qituvchilar uchun",
-                        description = "Dars materiallarini yuklang, testlar yarating va talabalar natijalarini real vaqtda kuzating."
+                        title = "Admin - pedagoglar uchun",
+                        description = "Dars materiallarini yuklang, testlar yarating va tinglovchilar natijalarini real vaqtda kuzating."
                     )
                     InstructionCard(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).hoverEffect(),
                         icon = Icons.Default.Face,
-                        title = "Tinglivchilar uchun",
+                        title = "Tinglovchilar uchun",
                         description = "Taqdimotlarni ko'rib chiqing, bilimlaringizni sinab ko'ring va natijalaringizni darhol bilib oling."
                     )
                     InstructionCard(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).hoverEffect(),
                         icon = Icons.Default.CloudSync,
                         title = "Tarmoq",
-                        description = "Lokal tarmoq orqali o'qituvchi va talabalar o'rtasida ma'lumotlarni oson almashing."
+                        description = "Lokal tarmoq orqali pedagoglar va tinglovchilar o'rtasida ma'lumotlarni oson almashing."
                     )
                 }
             }
@@ -116,12 +131,12 @@ fun SplashScreen(onContinue: () -> Unit) {
             ) {
                 Button(
                     onClick = onContinue,
-                    modifier = Modifier.width(300.dp).height(64.dp),
+                    modifier = Modifier.width(300.dp).height(64.dp).hoverEffect(),
                     shape = AppDesign.ComponentShape,
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981))
                 ) {
                     Text(
-                        "BOSHLASH",
+                        "Boshlash",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Black
                     )
