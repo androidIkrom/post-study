@@ -28,11 +28,18 @@ sealed class Screen {
     data object NetworkConnect : Screen()
     data object GroupSelection : Screen()
     data class StudentSelection(val group: Group) : Screen()
+    data object SubjectSelection : Screen()
 }
+
+data class Subject(
+    val id: Int = 0,
+    val name: String
+)
 
 data class Group(
     val id: Int,
-    val name: String
+    val name: String,
+    val subjectId: Int
 )
 
 data class Student(
@@ -52,7 +59,8 @@ data class ExamRecord(
     val timeSpentSeconds: Int,
     val timestamp: Long,
     val groupId: Int? = null,
-    val studentId: Int? = null
+    val studentId: Int? = null,
+    val subjectId: Int? = null
 )
 
 enum class UserRole {

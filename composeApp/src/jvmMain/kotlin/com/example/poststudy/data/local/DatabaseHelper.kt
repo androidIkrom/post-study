@@ -4,6 +4,7 @@ import com.example.poststudy.domain.model.*
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.security.MessageDigest
 
@@ -14,7 +15,11 @@ object Users : Table("users_v2") {
     override val primaryKey = PrimaryKey(id)
 }
 
-object SettingsTable : Table("settings_v4") {
+object SubjectsTable : IntIdTable("subjects_v1") {
+    val name = varchar("name", 255)
+}
+
+object SettingsTable : Table("settings_v5") {
     val id = integer("id").autoIncrement()
     val presentationPath = text("presentation_path")
     val testPath = text("test_path")
@@ -23,10 +28,11 @@ object SettingsTable : Table("settings_v4") {
     val mode = enumerationByName("mode", 20, LessonMode::class).default(LessonMode.ReAppropriation)
     val activeSessionTitle = varchar("active_session_title", 255).default("")
     val questionsPerStudent = integer("questions_per_student").default(0)
+    val subjectId = reference("subject_id", SubjectsTable).default(org.jetbrains.exposed.dao.id.EntityID(1, SubjectsTable))
     override val primaryKey = PrimaryKey(id)
 }
 
-object LessonsTable : Table("lessons_v2") {
+object LessonsTable : Table("lessons_v3") {
     val id = integer("id").autoIncrement()
     val title = varchar("title", 255)
     val presentationPath = text("presentation_path")
@@ -34,19 +40,21 @@ object LessonsTable : Table("lessons_v2") {
     val slideTimerMinutes = integer("slide_timer_minutes")
     val testTimerMinutes = integer("test_timer_minutes")
     val mode = enumerationByName("mode", 20, LessonMode::class).default(LessonMode.ReAppropriation)
+    val subjectId = reference("subject_id", SubjectsTable).default(org.jetbrains.exposed.dao.id.EntityID(1, SubjectsTable))
     override val primaryKey = PrimaryKey(id)
 }
 
-object ExamsTable : Table("exams_v1") {
+object ExamsTable : Table("exams_v2") {
     val id = integer("id").autoIncrement()
     val title = varchar("title", 255)
     val testPath = text("test_path")
     val testTimerMinutes = integer("test_timer_minutes")
     val questionsPerStudent = integer("questions_per_student")
+    val subjectId = reference("subject_id", SubjectsTable).default(org.jetbrains.exposed.dao.id.EntityID(1, SubjectsTable))
     override val primaryKey = PrimaryKey(id)
 }
 
-object ExamRecordsTable : Table("exam_records_v4") {
+object ExamRecordsTable : Table("exam_records_v5") {
     val id = integer("id").autoIncrement()
     val studentName = varchar("student_name", 255)
     val lessonTitle = varchar("lesson_title", 255)
@@ -58,11 +66,13 @@ object ExamRecordsTable : Table("exam_records_v4") {
     val timestamp = long("timestamp")
     val groupId = integer("group_id").nullable()
     val studentId = integer("student_id").nullable()
+    val subjectId = reference("subject_id", SubjectsTable).nullable()
     override val primaryKey = PrimaryKey(id)
 }
 
-object GroupsTable : IntIdTable("groups_v1") {
+object GroupsTable : IntIdTable("groups_v2") {
     val name = varchar("name", 255)
+    val subjectId = reference("subject_id", SubjectsTable).default(org.jetbrains.exposed.dao.id.EntityID(1, SubjectsTable))
 }
 
 object StudentsTable : IntIdTable("students_v1") {
@@ -72,32 +82,49 @@ object StudentsTable : IntIdTable("students_v1") {
 
 object DatabaseHelper {
     fun init() {
-        val dbPath = System.getProperty("user.home") + "/.breakpoint/breakpoint_v1.db"
+        val dbPath = System.getProperty("user.home") + "/.breakpoint/breakpoint_v2.db"
         val dbFile = java.io.File(dbPath)
         if (!dbFile.parentFile.exists()) {
             dbFile.parentFile.mkdirs()
         }
         
         Database.connect("jdbc:sqlite:$dbPath", "org.sqlite.JDBC")
+        
         transaction {
-            SchemaUtils.create(Users, SettingsTable, LessonsTable, ExamsTable, ExamRecordsTable, GroupsTable, StudentsTable)
-            
-            if (GroupsTable.selectAll().count() == 0L) {
-                GroupsTable.insert {
-                    it[name] = "Guruh 1"
-                }
-            }
+            SchemaUtils.createMissingTablesAndColumns(
+                Users, SubjectsTable, SettingsTable, LessonsTable, 
+                ExamsTable, ExamRecordsTable, GroupsTable, StudentsTable
+            )
+            initializeDefaults()
+        }
+    }
 
-            if (SettingsTable.selectAll().count() == 0L) {
-                SettingsTable.insert {
-                    it[SettingsTable.presentationPath] = ""
-                    it[SettingsTable.testPath] = ""
-                    it[SettingsTable.slideTimerMinutes] = 5
-                    it[SettingsTable.testTimerMinutes] = 30
-                    it[SettingsTable.mode] = LessonMode.ReAppropriation
-                    it[SettingsTable.activeSessionTitle] = ""
-                    it[SettingsTable.questionsPerStudent] = 0
-                }
+    private fun initializeDefaults() = transaction {
+        if (SubjectsTable.selectAll().count() == 0L) {
+            SubjectsTable.insertAndGetId {
+                it[name] = "Asosiy fan"
+            }
+        }
+
+        val mainSubjectId = SubjectsTable.selectAll().first()[SubjectsTable.id]
+
+        if (GroupsTable.selectAll().count() == 0L) {
+            GroupsTable.insert {
+                it[name] = "Guruh 1"
+                it[subjectId] = mainSubjectId
+            }
+        }
+
+        if (SettingsTable.selectAll().where { SettingsTable.subjectId eq mainSubjectId }.count() == 0L) {
+            SettingsTable.insert {
+                it[presentationPath] = ""
+                it[testPath] = ""
+                it[slideTimerMinutes] = 5
+                it[testTimerMinutes] = 30
+                it[mode] = LessonMode.ReAppropriation
+                it[activeSessionTitle] = ""
+                it[questionsPerStudent] = 0
+                it[subjectId] = mainSubjectId
             }
         }
     }
@@ -127,13 +154,56 @@ object DatabaseHelper {
             .count() > 0
     }
 
+    fun validateUserPassword(password: String): Boolean = transaction {
+        Users.selectAll().where { Users.password eq hashPassword(password) }.count() > 0
+    }
+
     fun clearAllUsers() = transaction {
         Users.deleteAll()
     }
 
-    fun saveSettings(presentationPath: String, testPath: String, slideTimerMin: Int, testTimerMin: Int, mode: LessonMode, sessionTitle: String? = null, qCount: Int = 0) {
+    // --- Subjects API ---
+    fun getAllSubjects(): List<Subject> = transaction {
+        SubjectsTable.selectAll().map { Subject(it[SubjectsTable.id].value, it[SubjectsTable.name]) }
+    }
+
+    fun addSubject(name: String): Int = transaction {
+        val id = SubjectsTable.insertAndGetId { it[SubjectsTable.name] = name }.value
+        // Initialize settings for new subject
+        SettingsTable.insert {
+            it[presentationPath] = ""
+            it[testPath] = ""
+            it[slideTimerMinutes] = 5
+            it[testTimerMinutes] = 30
+            it[mode] = LessonMode.ReAppropriation
+            it[activeSessionTitle] = ""
+            it[questionsPerStudent] = 0
+            it[subjectId] = org.jetbrains.exposed.dao.id.EntityID(id, SubjectsTable)
+        }
+        id
+    }
+
+    fun updateSubject(subject: Subject) = transaction {
+        SubjectsTable.update({ SubjectsTable.id eq subject.id }) { it[name] = subject.name }
+    }
+
+    fun deleteSubject(id: Int) = transaction {
+        // Cascading deletes would be nice but manual is safer here for SQLite via Exposed
+        LessonsTable.deleteWhere { subjectId eq id }
+        ExamsTable.deleteWhere { subjectId eq id }
+        ExamRecordsTable.deleteWhere { subjectId eq id }
+        
+        val groupIds = GroupsTable.selectAll().where { GroupsTable.subjectId eq id }.map { it[GroupsTable.id] }
+        StudentsTable.deleteWhere { groupId inList groupIds }
+        GroupsTable.deleteWhere { subjectId eq id }
+        SettingsTable.deleteWhere { subjectId eq id }
+        
+        SubjectsTable.deleteWhere { SubjectsTable.id eq id }
+    }
+
+    fun saveSettings(presentationPath: String, testPath: String, slideTimerMin: Int, testTimerMin: Int, mode: LessonMode, sessionTitle: String? = null, qCount: Int = 0, subjectId: Int = 1) {
         transaction {
-            SettingsTable.update({ SettingsTable.id eq 1 }) {
+            SettingsTable.update({ SettingsTable.subjectId eq subjectId }) {
                 it[SettingsTable.presentationPath] = presentationPath
                 it[SettingsTable.testPath] = testPath
                 it[SettingsTable.slideTimerMinutes] = slideTimerMin
@@ -147,8 +217,8 @@ object DatabaseHelper {
         }
     }
 
-    fun getSettings(): Settings = transaction {
-        SettingsTable.selectAll().map { row ->
+    fun getSettings(subjectId: Int = 1): Settings = transaction {
+        SettingsTable.selectAll().where { SettingsTable.subjectId eq subjectId }.map { row ->
             Settings(
                 id = row[SettingsTable.id],
                 presentationPath = row[SettingsTable.presentationPath],
@@ -162,8 +232,8 @@ object DatabaseHelper {
         }.firstOrNull() ?: Settings(1, "", "", 300, 1800, LessonMode.ReAppropriation, "", 0)
     }
 
-    fun getAllLessons(): List<Lesson> = transaction {
-        LessonsTable.selectAll().map { row ->
+    fun getAllLessons(subjectId: Int): List<Lesson> = transaction {
+        LessonsTable.selectAll().where { LessonsTable.subjectId eq subjectId }.map { row ->
             Lesson(
                 id = row[LessonsTable.id],
                 title = row[LessonsTable.title],
@@ -171,7 +241,8 @@ object DatabaseHelper {
                 testPath = row[LessonsTable.testPath],
                 slideTimerSeconds = row[LessonsTable.slideTimerMinutes] * 60,
                 testTimerSeconds = row[LessonsTable.testTimerMinutes] * 60,
-                mode = row[LessonsTable.mode]
+                mode = row[LessonsTable.mode],
+                subjectId = row[LessonsTable.subjectId].value
             )
         }
     }
@@ -185,6 +256,7 @@ object DatabaseHelper {
                 it[slideTimerMinutes] = lesson.slideTimerSeconds / 60
                 it[testTimerMinutes] = lesson.testTimerSeconds / 60
                 it[mode] = lesson.mode
+                it[subjectId] = org.jetbrains.exposed.dao.id.EntityID(lesson.subjectId, SubjectsTable)
             }
         }
     }
@@ -208,14 +280,15 @@ object DatabaseHelper {
         }
     }
 
-    fun getAllExams(): List<Exam> = transaction {
-        ExamsTable.selectAll().map { row ->
+    fun getAllExams(subjectId: Int): List<Exam> = transaction {
+        ExamsTable.selectAll().where { ExamsTable.subjectId eq subjectId }.map { row ->
             Exam(
                 id = row[ExamsTable.id],
                 title = row[ExamsTable.title],
                 testPath = row[ExamsTable.testPath],
                 testTimerSeconds = row[ExamsTable.testTimerMinutes] * 60,
-                questionsPerStudent = row[ExamsTable.questionsPerStudent]
+                questionsPerStudent = row[ExamsTable.questionsPerStudent],
+                subjectId = row[ExamsTable.subjectId].value
             )
         }
     }
@@ -227,6 +300,7 @@ object DatabaseHelper {
                 it[testPath] = exam.testPath
                 it[testTimerMinutes] = exam.testTimerSeconds / 60
                 it[questionsPerStudent] = exam.questionsPerStudent
+                it[subjectId] = org.jetbrains.exposed.dao.id.EntityID(exam.subjectId, SubjectsTable)
             }
         }
     }
@@ -261,12 +335,19 @@ object DatabaseHelper {
                 it[timestamp] = record.timestamp
                 it[groupId] = record.groupId
                 it[studentId] = record.studentId
+                it[subjectId] = record.subjectId?.let { sId -> org.jetbrains.exposed.dao.id.EntityID(sId, SubjectsTable) }
             }
         }
     }
 
-    fun getAllExamRecords(): List<ExamRecord> = transaction {
-        ExamRecordsTable.selectAll().orderBy(ExamRecordsTable.timestamp, SortOrder.DESC).map { row ->
+    fun getAllExamRecords(subjectId: Int? = null): List<ExamRecord> = transaction {
+        val query = if (subjectId != null) {
+            ExamRecordsTable.selectAll().where { ExamRecordsTable.subjectId eq subjectId }
+        } else {
+            ExamRecordsTable.selectAll()
+        }
+        
+        query.orderBy(ExamRecordsTable.timestamp, SortOrder.DESC).map { row ->
             ExamRecord(
                 id = row[ExamRecordsTable.id],
                 studentName = row[ExamRecordsTable.studentName],
@@ -278,7 +359,8 @@ object DatabaseHelper {
                 timeSpentSeconds = row[ExamRecordsTable.timeSpentSeconds],
                 timestamp = row[ExamRecordsTable.timestamp],
                 groupId = row[ExamRecordsTable.groupId],
-                studentId = row[ExamRecordsTable.studentId]
+                studentId = row[ExamRecordsTable.studentId],
+                subjectId = row[ExamRecordsTable.subjectId]?.value
             )
         }
     }
@@ -289,20 +371,25 @@ object DatabaseHelper {
         }
     }
 
-    fun clearAllExamRecords() {
-        transaction {
+    fun clearAllExamRecords(subjectId: Int? = null) = transaction {
+        if (subjectId != null) {
+            ExamRecordsTable.deleteWhere { ExamRecordsTable.subjectId eq subjectId }
+        } else {
             ExamRecordsTable.deleteAll()
         }
     }
 
     // --- Groups API ---
 
-    fun getAllGroups(): List<Group> = transaction {
-        GroupsTable.selectAll().map { Group(it[GroupsTable.id].value, it[GroupsTable.name]) }
+    fun getAllGroups(subjectId: Int): List<Group> = transaction {
+        GroupsTable.selectAll().where { GroupsTable.subjectId eq subjectId }.map { Group(it[GroupsTable.id].value, it[GroupsTable.name], it[GroupsTable.subjectId].value) }
     }
 
-    fun addGroup(name: String): Int = transaction {
-        GroupsTable.insertAndGetId { it[GroupsTable.name] = name }.value
+    fun addGroup(name: String, subjectId: Int): Int = transaction {
+        GroupsTable.insertAndGetId { 
+            it[GroupsTable.name] = name 
+            it[GroupsTable.subjectId] = org.jetbrains.exposed.dao.id.EntityID(subjectId, SubjectsTable)
+        }.value
     }
 
     fun updateGroup(group: Group) = transaction {
@@ -310,6 +397,7 @@ object DatabaseHelper {
     }
 
     fun deleteGroup(id: Int) = transaction {
+        StudentsTable.deleteWhere { groupId eq id }
         GroupsTable.deleteWhere { GroupsTable.id eq id }
     }
 
@@ -328,6 +416,7 @@ object DatabaseHelper {
     }
 
     fun deleteStudent(id: Int) = transaction {
+        ExamRecordsTable.deleteWhere { studentId eq id }
         StudentsTable.deleteWhere { StudentsTable.id eq id }
     }
 
@@ -346,14 +435,20 @@ object DatabaseHelper {
                     timeSpentSeconds = row[ExamRecordsTable.timeSpentSeconds],
                     timestamp = row[ExamRecordsTable.timestamp],
                     groupId = row[ExamRecordsTable.groupId],
-                    studentId = row[ExamRecordsTable.studentId]
+                    studentId = row[ExamRecordsTable.studentId],
+                    subjectId = row[ExamRecordsTable.subjectId]?.value
                 )
             }
     }
 
-    fun getGroupRecords(groupId: Int): List<ExamRecord> = transaction {
-        ExamRecordsTable.selectAll().where { ExamRecordsTable.groupId eq groupId }
-            .orderBy(ExamRecordsTable.timestamp, SortOrder.DESC)
+    fun getGroupRecords(groupId: Int, subjectId: Int? = null): List<ExamRecord> = transaction {
+        val query = if (subjectId != null) {
+            ExamRecordsTable.selectAll().where { (ExamRecordsTable.groupId eq groupId) and (ExamRecordsTable.subjectId eq subjectId) }
+        } else {
+            ExamRecordsTable.selectAll().where { ExamRecordsTable.groupId eq groupId }
+        }
+        
+        query.orderBy(ExamRecordsTable.timestamp, SortOrder.DESC)
             .map { row ->
                 ExamRecord(
                     id = row[ExamRecordsTable.id],
@@ -366,15 +461,16 @@ object DatabaseHelper {
                     timeSpentSeconds = row[ExamRecordsTable.timeSpentSeconds],
                     timestamp = row[ExamRecordsTable.timestamp],
                     groupId = row[ExamRecordsTable.groupId],
-                    studentId = row[ExamRecordsTable.studentId]
+                    studentId = row[ExamRecordsTable.studentId],
+                    subjectId = row[ExamRecordsTable.subjectId]?.value
                 )
             }
     }
 
-    fun getAllGroupsWithStats(): List<Pair<Group, Int>> = transaction {
-        val groups = getAllGroups()
+    fun getAllGroupsWithStats(subjectId: Int): List<Pair<Group, Int>> = transaction {
+        val groups = getAllGroups(subjectId)
         groups.map { group ->
-            val records = getGroupRecords(group.id)
+            val records = getGroupRecords(group.id, subjectId)
             val avg = if (records.isNotEmpty()) {
                 records.map { (it.correctAnswers.toFloat() / it.totalQuestions * 100).toInt() }.average().toInt()
             } else 0

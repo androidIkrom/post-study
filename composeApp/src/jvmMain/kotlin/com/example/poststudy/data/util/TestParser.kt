@@ -63,15 +63,14 @@ object TestParser {
             
             val trimmedText = currentQuestionText.trim()
             if (trimmedText.isBlank()) {
-                // If we found options but no question text
                 if (currentOptions.isNotEmpty()) {
                     warnings.add("$questionCounter-savol matni bo'sh bo'lganligi sababli o'tkazib yuborildi.")
                 }
             } else if (currentOptions.size < 2) {
-                warnings.add("\"$trimmedText\" savolida variantlar yetarli emas (kamida 2 ta bo'lishi kerak).")
+                warnings.add("\"${trimmedText.take(30)}...\" savolida variantlar yetarli emas (kamida 2 ta bo'lishi kerak).")
             } else {
                 val finalCorrectIndex = if (currentCorrectIndex == -1) {
-                    warnings.add("\"$trimmedText\" savolida to'g'ri javob belgilanmagan, birinchi variant (A) tanlandi.")
+                    warnings.add("\"${trimmedText.take(30)}...\" savolida to'g'ri javob belgilanmagan, default sifatida A varianti to'g'ri deb olindi.")
                     0
                 } else {
                     currentCorrectIndex
@@ -80,49 +79,75 @@ object TestParser {
             }
         }
 
-        // Improved Regex for questions: 1. or 1) or 1 )
-        val questionRegex = Regex("""^(\d+)\s*[\.\)]\s*(.*)""")
-        // Improved Regex for options: A) or A. or a) or a. or 1) or 1.
-        val optionRegex = Regex("""^([a-hA-H]|[1-9])\s*[\)\.]\s*(.*)""")
+        // Improved Regex for questions: 1., 1), 1-savol., S1:, 1 - savol
+        val questionRegex = Regex("""^(?:savol\s*|s\s*|vopros\s*|q\s*)?(\d+)(?:\s*-?\s*(?:savol|vopros))?\s*[\.\)\:]\s*(.*)""", RegexOption.IGNORE_CASE)
+        // Improved Regex for options: A), A., 1-variant., V1)
+        val optionRegex = Regex("""^(?:variant\s*|javob\s*|v\s*)?([a-h]|[1-9])(?:\s*-?\s*(?:variant|javob))?\s*[\)\.\:]\s*(.*)""", RegexOption.IGNORE_CASE)
 
-        for (line in lines) {
-            val questionMatch = questionRegex.find(line)
-            val optionMatch = optionRegex.find(line)
+        for (rawLine in lines) {
+            val isStarred = rawLine.startsWith("*")
+            val isEndStarred = rawLine.endsWith("*")
+            
+            var line = rawLine
+            if (isStarred) line = line.removePrefix("*").trim()
+            if (isEndStarred) line = line.removeSuffix("*").trim()
 
-            if (questionMatch != null) {
-                // It's a new question
+            var isQuestion = false
+            var isOption = false
+            var text = ""
+
+            val optMatch = optionRegex.find(line)
+            val qMatch = questionRegex.find(line)
+
+            if (optMatch != null && qMatch != null) {
+                val qText = qMatch.groupValues[2]
+                val oText = optMatch.groupValues[2]
+                val lowerLine = line.lowercase()
+                
+                if ((lowerLine.contains("variant") || lowerLine.contains("javob")) && !lowerLine.contains("savol")) {
+                    isOption = true
+                    text = oText
+                } else if (lowerLine.contains("savol") || lowerLine.contains("vopros")) {
+                    isQuestion = true
+                    text = qText
+                } else {
+                    isQuestion = true
+                    text = qText
+                }
+            } else if (optMatch != null) {
+                isOption = true
+                text = optMatch.groupValues[2]
+            } else if (qMatch != null) {
+                isQuestion = true
+                text = qMatch.groupValues[2]
+            }
+
+            if (isQuestion) {
                 saveQuestion()
-                currentQuestionText = questionMatch.groupValues[2].trim()
+                currentQuestionText = text.trim()
                 currentOptions.clear()
                 currentCorrectIndex = -1
                 isBuildingOption = false
-            } else if (optionMatch != null) {
-                // It's an option
+            } else if (isOption) {
                 isBuildingOption = true
-                var rawOption = optionMatch.groupValues[2].trim()
+                val rawOpt = text.trim()
                 
-                // Handle '*' if it's at the start or end of the option text
-                if (rawOption.startsWith("*") || rawOption.endsWith("*")) {
+                if (isStarred || isEndStarred) {
                     currentCorrectIndex = currentOptions.size
-                    rawOption = rawOption.removePrefix("*").removeSuffix("*").trim()
                 }
                 
-                currentOptions.add(rawOption)
+                currentOptions.add(rawOpt)
             } else {
-                // It's a continuation of previous question or option
                 if (isBuildingOption && currentOptions.isNotEmpty()) {
                     val lastIdx = currentOptions.size - 1
-                    var updatedOption = currentOptions[lastIdx] + " " + line
+                    val updatedOption = currentOptions[lastIdx] + " " + line
                     
-                    if (updatedOption.startsWith("*") || updatedOption.endsWith("*")) {
+                    if (isStarred || isEndStarred) {
                         currentCorrectIndex = lastIdx
-                        updatedOption = updatedOption.removePrefix("*").removeSuffix("*").trim()
                     }
-                    currentOptions[lastIdx] = updatedOption
+                    currentOptions[lastIdx] = updatedOption.trim()
                 } else {
-                    // Append to question text
                     if (currentQuestionText.isEmpty()) {
-                        // If it doesn't match numbering but it's text, it might be a question without a number
                         currentQuestionText = line
                     } else {
                         currentQuestionText += " " + line
@@ -131,11 +156,10 @@ object TestParser {
             }
         }
 
-        // Save the last question
         saveQuestion()
 
         if (questions.isEmpty() && warnings.isEmpty()) {
-            return ParseResult(error = "Faylda testlar topilmadi. Iltimos, formatni tekshiring: 1. Savol, A) Variant*")
+            return ParseResult(error = "Faylda testlar topilmadi. Iltimos, formatni tekshiring (masalan: 1. Savol, A) Variant).")
         }
 
         return ParseResult(questions, warnings)

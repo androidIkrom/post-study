@@ -5,7 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -17,7 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.poststudy.data.local.DatabaseHelper
+import java.io.File
+import com.example.poststudy.di.AppContainer
 import com.example.poststudy.domain.model.Exam
 import com.example.poststudy.presentation.theme.AppDesign
 import com.example.poststudy.presentation.ui.components.hoverEffect
@@ -26,6 +27,7 @@ import com.example.poststudy.presentation.ui.components.PostStudyDialog
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExamSelectionScreen(
+    subjectId: Int,
     onExamSelected: (Exam) -> Unit,
     onAddNewExam: () -> Unit,
     onEditExam: (Exam) -> Unit,
@@ -35,10 +37,13 @@ fun ExamSelectionScreen(
     var isLoading by remember { mutableStateOf(true) }
     var examToDelete by remember { mutableStateOf<Exam?>(null) }
 
-    LaunchedEffect(Unit) {
-        exams.clear()
-        exams.addAll(DatabaseHelper.getAllExams())
-        isLoading = false
+    LaunchedEffect(subjectId) {
+        isLoading = true
+        AppContainer.localRepository.getAllExams(subjectId).collect {
+            exams.clear()
+            exams.addAll(it)
+            isLoading = false
+        }
     }
 
     if (examToDelete != null) {
@@ -50,7 +55,7 @@ fun ExamSelectionScreen(
             confirmColor = Color(0xFFEF4444),
             onConfirm = {
                 examToDelete?.let {
-                    DatabaseHelper.deleteExam(it.id)
+                    AppContainer.localRepository.deleteExam(it.id)
                     exams.remove(it)
                 }
                 examToDelete = null
@@ -109,11 +114,14 @@ fun ExamSelectionScreen(
                     columns = GridCells.Adaptive(minSize = 400.dp),
                     modifier = Modifier.fillMaxSize().padding(paddingValues).padding(32.dp),
                     horizontalArrangement = Arrangement.spacedBy(32.dp),
-                    verticalArrangement = Arrangement.spacedBy(32.dp)
+                    verticalArrangement = Arrangement.spacedBy(32.dp),
+                    contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp)
                 ) {
-                    items(exams) { exam ->
+                    itemsIndexed(exams) { index, exam ->
+                        val color = AppDesign.RainbowPalette[index % AppDesign.RainbowPalette.size]
                         ExamCard(
                             exam = exam,
+                            themeColor = color,
                             onSelect = { onExamSelected(exam) },
                             onEdit = { onEditExam(exam) },
                             onDelete = { examToDelete = exam }
@@ -128,16 +136,19 @@ fun ExamSelectionScreen(
 @Composable
 fun ExamCard(
     exam: Exam,
+    themeColor: Color = AppDesign.Indigo,
     onSelect: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val fileExists = File(exam.testPath).exists()
+    
     Surface(
         onClick = onSelect,
         modifier = Modifier.fillMaxWidth().height(200.dp).hoverEffect(),
         shape = AppDesign.CardShape,
-        color = Color.White,
-        border = BorderStroke(3.dp, Color(0xFF6366F1).copy(alpha = 0.4f)),
+        color = if (fileExists) Color.White else Color(0xFFFFF1F2),
+        border = BorderStroke(4.dp, if (fileExists) themeColor.copy(alpha = 0.5f) else Color.Red.copy(alpha = 0.5f)),
         shadowElevation = 12.dp
     ) {
         Column(
@@ -154,22 +165,31 @@ fun ExamCard(
                         text = exam.title,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Black,
-                        color = Color(0xFF1E293B)
+                        color = if (fileExists) themeColor else Color(0xFF991B1B)
                     )
-                    Text(
-                        text = "IMTIHON",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = Color(0xFF6366F1),
-                        fontWeight = FontWeight.Black
-                    )
+                    if (!fileExists) {
+                        Text(
+                            text = "FAYL TOPILMADI",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.Red,
+                            fontWeight = FontWeight.Bold
+                        )
+                    } else {
+                        Text(
+                            text = "IMTIHON",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = themeColor.copy(alpha = 0.8f),
+                            fontWeight = FontWeight.Black
+                        )
+                    }
                 }
                 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     IconButton(
                         onClick = onEdit,
-                        modifier = Modifier.background(Color(0xFF3B82F6).copy(alpha = 0.1f), CircleShape)
+                        modifier = Modifier.background(themeColor.copy(alpha = 0.1f), CircleShape)
                     ) {
-                        Icon(Icons.Default.Edit, contentDescription = "Tahrirlash", tint = Color(0xFF3B82F6))
+                        Icon(Icons.Default.Edit, contentDescription = "Tahrirlash", tint = themeColor)
                     }
                     IconButton(
                         onClick = onDelete,
@@ -188,12 +208,12 @@ fun ExamCard(
                 InfoBadge(
                     icon = Icons.Default.Timer,
                     text = "${exam.testTimerSeconds / 60} daqiqa",
-                    color = Color(0xFF3B82F6)
+                    color = themeColor
                 )
                 InfoBadge(
                     icon = Icons.Default.Assignment,
                     text = "${exam.questionsPerStudent} ta savol",
-                    color = Color(0xFF10B981)
+                    color = themeColor
                 )
             }
         }

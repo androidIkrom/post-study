@@ -14,7 +14,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.poststudy.data.network.NetworkManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import com.example.poststudy.di.AppContainer
 import com.example.poststudy.data.network.SessionData
 import com.example.poststudy.presentation.theme.AppDesign
 
@@ -35,15 +38,16 @@ fun NetworkConnectScreen(
             isLoading = true
             errorMessage = ""
             // Use a coroutine to fetch session
-            Thread {
-                val session = NetworkManager.fetchSession(ipAddress)
-                isLoading = false
-                if (session != null) {
-                    onConnected(ipAddress, session)
-                } else {
-                    errorMessage = "Adminga ulanib bo'lmadi. IP manzilni tekshiring."
+            CoroutineScope(Dispatchers.IO).launch {
+                AppContainer.networkRepository.fetchSession(ipAddress).collect { session ->
+                    isLoading = false
+                    if (session != null) {
+                        onConnected(ipAddress, session)
+                    } else {
+                        errorMessage = "Adminga ulanib bo'lmadi. IP manzilni tekshiring."
+                    }
                 }
-            }.start()
+            }
         }
     }
 
@@ -150,7 +154,7 @@ fun NetworkConnectScreen(
                         Spacer(Modifier.height(32.dp))
 
                         Button(
-                            onClick = connect,
+                            onClick = { connect() },
                             modifier = Modifier.fillMaxWidth().height(64.dp),
                             shape = AppDesign.ComponentShape,
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6366F1)),

@@ -1,6 +1,8 @@
 package com.example.poststudy.data.network
 
-import com.example.poststudy.data.local.DatabaseHelper
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import com.example.poststudy.di.AppContainer
 import com.example.poststudy.domain.model.*
 import com.google.gson.Gson
 import com.sun.net.httpserver.HttpServer
@@ -13,6 +15,7 @@ data class SessionData(
     val slideTimerSeconds: Int,
     val testTimerSeconds: Int,
     val mode: LessonMode,
+    val subjectId: Int,
     val encodedSlides: List<String> = emptyList()
 )
 
@@ -75,7 +78,9 @@ object NetworkManager {
 
                 createContext("/groups") { exchange ->
                     try {
-                        val groups = DatabaseHelper.getAllGroups()
+                        val query = exchange.requestURI.query
+                        val subjectId = query?.split("=")?.get(1)?.toIntOrNull() ?: 1
+                        val groups = runBlocking { AppContainer.localRepository.getAllGroups(subjectId).first() }
                         val response = gson.toJson(groups)
                         val bytes = response.toByteArray(StandardCharsets.UTF_8)
                         exchange.responseHeaders.add("Content-Type", "application/json")
@@ -89,8 +94,8 @@ object NetworkManager {
                 createContext("/students") { exchange ->
                     try {
                         val query = exchange.requestURI.query
-                        val groupId = query?.split("=")?.get(1)?.toIntOrNull() ?: -1
-                        val students = DatabaseHelper.getStudentsByGroup(groupId)
+                        val groupId = query?.split("&")?.find { it.startsWith("groupId=") }?.split("=")?.get(1)?.toIntOrNull() ?: -1
+                        val students = runBlocking { AppContainer.localRepository.getStudentsByGroup(groupId).first() }
                         val response = gson.toJson(students)
                         val bytes = response.toByteArray(StandardCharsets.UTF_8)
                         exchange.responseHeaders.add("Content-Type", "application/json")
@@ -106,7 +111,7 @@ object NetworkManager {
                         if ("POST" == exchange.requestMethod) {
                             val body = exchange.requestBody.bufferedReader(StandardCharsets.UTF_8).readText()
                             val studentReq = gson.fromJson(body, Student::class.java)
-                            val id = DatabaseHelper.addStudent(studentReq.name, studentReq.groupId)
+                            val id = runBlocking { AppContainer.localRepository.addStudent(studentReq.name, studentReq.groupId).first() }
                             val response = id.toString()
                             exchange.sendResponseHeaders(200, response.length.toLong())
                             exchange.responseBody.use { it.write(response.toByteArray()) }
@@ -167,9 +172,9 @@ object NetworkManager {
         }
     }
 
-    fun fetchGroups(ip: String, port: Int = 8080): List<Group> {
+    fun fetchGroups(ip: String, subjectId: Int, port: Int = 8080): List<Group> {
         return try {
-            val url = java.net.URL("http://$ip:$port/groups")
+            val url = java.net.URL("http://$ip:$port/groups?subjectId=$subjectId")
             val connection = url.openConnection() as java.net.HttpURLConnection
             connection.connectTimeout = 5000
             connection.requestMethod = "GET"

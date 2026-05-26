@@ -46,6 +46,18 @@ object AppDesign {
     
     val CardShape = RoundedCornerShape(32.dp)
     val ComponentShape = RoundedCornerShape(20.dp)
+
+    // Creative Color Palette
+    val Indigo = Color(0xFF6366F1)
+    val Emerald = Color(0xFF10B981)
+    val Amber = Color(0xFFF59E0B)
+    val Rose = Color(0xFFF43F5E)
+    val Sky = Color(0xFF0EA5E9)
+    val Violet = Color(0xFF8B5CF6)
+    val Orange = Color(0xFFFB923C)
+    val Teal = Color(0xFF14B8A6)
+
+    val RainbowPalette = listOf(Indigo, Emerald, Amber, Rose, Sky, Violet, Orange, Teal)
 }
 
 @Composable

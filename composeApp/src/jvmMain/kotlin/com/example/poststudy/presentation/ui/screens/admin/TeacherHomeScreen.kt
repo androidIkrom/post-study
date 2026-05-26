@@ -31,8 +31,9 @@ import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.poststudy.data.local.DatabaseHelper
-import com.example.poststudy.data.network.NetworkManager
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import com.example.poststudy.di.AppContainer
 import com.example.poststudy.domain.model.Group
 import com.example.poststudy.domain.model.LessonMode
 import com.example.poststudy.presentation.theme.AppDesign
@@ -41,6 +42,8 @@ import com.example.poststudy.presentation.ui.components.hoverEffect
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TeacherHomeScreen(
+    subjectId: Int,
+    subjectName: String,
     onNavigateToLessons: () -> Unit,
     onNavigateToExam: () -> Unit,
     onNavigateToHistory: () -> Unit,
@@ -48,14 +51,16 @@ fun TeacherHomeScreen(
     onNavigateToGroups: () -> Unit,
     onBack: () -> Unit
 ) {
-    var settings by remember { mutableStateOf(DatabaseHelper.getSettings()) }
+    var settings by remember { mutableStateOf(runBlocking { AppContainer.localRepository.getSettings(subjectId).first() }) }
     var currentMode by remember { mutableStateOf(settings.mode) }
-    val localIp = remember { NetworkManager.getLocalIpAddress() }
+    val localIp = remember { runBlocking { AppContainer.networkRepository.getLocalIpAddress().first() } }
 
     // Refresh settings when screen is shown
-    LaunchedEffect(Unit) {
-        settings = DatabaseHelper.getSettings()
-        currentMode = settings.mode
+    LaunchedEffect(subjectId) {
+        AppContainer.localRepository.getSettings(subjectId).collect {
+            settings = it
+            currentMode = it.mode
+        }
     }
 
     Box(
@@ -82,7 +87,7 @@ fun TeacherHomeScreen(
             containerColor = Color.Transparent,
             topBar = {
                 TopAppBar(
-                    title = { Text("Admin paneli", color = Color(0xFF065F46), fontWeight = FontWeight.Black) },
+                    title = { Text(subjectName, color = Color(0xFF065F46), fontWeight = FontWeight.Black) },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Orqaga", tint = Color(0xFF065F46))
@@ -135,7 +140,7 @@ fun TeacherHomeScreen(
                 }
 
                 Row(
-                    modifier = Modifier.fillMaxWidth().widthIn(max = 1200.dp),
+                    modifier = Modifier.fillMaxWidth().widthIn(max = 1200.dp).padding(top = 32.dp), // Increased top padding
                     horizontalArrangement = Arrangement.spacedBy(32.dp)
                 ) {
                     HomeCard(
@@ -143,7 +148,7 @@ fun TeacherHomeScreen(
                         title = "Darslar",
                         subtitle = "Materiallarni boshqarish",
                         icon = Icons.AutoMirrored.Filled.MenuBook,
-                        color = Color(0xFFF59E0B), // Amber 500
+                        color = AppDesign.Amber,
                         onClick = onNavigateToLessons
                     )
                     HomeCard(
@@ -151,7 +156,7 @@ fun TeacherHomeScreen(
                         title = "Imtihon",
                         subtitle = "Test sinovlarini o'tkazish",
                         icon = Icons.Default.Assignment,
-                        color = Color(0xFF6366F1), // Indigo 500
+                        color = AppDesign.Indigo,
                         onClick = onNavigateToExam
                     )
                     HomeCard(
@@ -159,7 +164,7 @@ fun TeacherHomeScreen(
                         title = "Guruhlar",
                         subtitle = "Tinglovchilar va guruhlar",
                         icon = Icons.Default.Groups,
-                        color = Color(0xFF8B5CF6), // Violet 500
+                        color = AppDesign.Violet,
                         onClick = onNavigateToGroups
                     )
                     HomeCard(
@@ -167,7 +172,7 @@ fun TeacherHomeScreen(
                         title = "Monitoring",
                         subtitle = "Ta'lim holati",
                         icon = Icons.Default.Analytics,
-                        color = Color(0xFF0EA5E9), // Sky 500
+                        color = AppDesign.Sky,
                         onClick = onNavigateToMonitoring
                     )
                     HomeCard(
@@ -175,7 +180,7 @@ fun TeacherHomeScreen(
                         title = "Tahlil",
                         subtitle = "Natijalarni ko'rish",
                         icon = Icons.AutoMirrored.Filled.List,
-                        color = Color(0xFF10B981), // Emerald 500
+                        color = AppDesign.Emerald,
                         onClick = onNavigateToHistory
                     )
                 }
@@ -283,16 +288,16 @@ fun TeacherHomeScreen(
                                 isSelected = currentMode == LessonMode.ReAppropriation,
                                 onClick = {
                                     currentMode = LessonMode.ReAppropriation
-                                    DatabaseHelper.saveSettings(
+                                    AppContainer.localRepository.saveSettings(
                                         settings.presentationPath,
                                         settings.testPath,
                                         settings.slideTimerSeconds / 60,
                                         settings.testTimerSeconds / 60,
                                         LessonMode.ReAppropriation,
                                         settings.activeSessionTitle,
-                                        settings.questionsPerStudent
+                                        settings.questionsPerStudent,
+                                        subjectId
                                     )
-                                    settings = DatabaseHelper.getSettings()
                                 }
                             )
                             ModeToggleButton(
@@ -301,16 +306,16 @@ fun TeacherHomeScreen(
                                 isSelected = currentMode == LessonMode.TestOnly,
                                 onClick = {
                                     currentMode = LessonMode.TestOnly
-                                    DatabaseHelper.saveSettings(
+                                    AppContainer.localRepository.saveSettings(
                                         settings.presentationPath,
                                         settings.testPath,
                                         settings.slideTimerSeconds / 60,
                                         settings.testTimerSeconds / 60,
                                         LessonMode.TestOnly,
                                         settings.activeSessionTitle,
-                                        settings.questionsPerStudent
+                                        settings.questionsPerStudent,
+                                        subjectId
                                     )
-                                    settings = DatabaseHelper.getSettings()
                                 }
                             )
                         }
@@ -337,7 +342,7 @@ fun HomeCard(
             .clickable { onClick() },
         shape = AppDesign.ComponentShape,
         color = Color.White,
-        border = BorderStroke(3.dp, color),
+        border = BorderStroke(4.dp, color.copy(alpha = 0.8f)),
         shadowElevation = 8.dp
     ) {
         Column(
@@ -408,20 +413,27 @@ fun ModeToggleButton(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MonitoringScreen(onBack: () -> Unit) {
+fun MonitoringScreen(subjectId: Int, onBack: () -> Unit) {
     var selectedGroup by remember { mutableStateOf<Group?>(null) }
-    var groups by remember { mutableStateOf(DatabaseHelper.getAllGroupsWithStats()) }
+    var groups by remember { mutableStateOf<List<Pair<Group, Int>>>(emptyList()) }
     
     // Auto refresh or initial fetch
-    LaunchedEffect(Unit) {
-        groups = DatabaseHelper.getAllGroupsWithStats()
+    LaunchedEffect(subjectId) {
+        AppContainer.localRepository.getAllGroupsWithStats(subjectId).collect {
+            groups = it
+        }
     }
 
-    val stats = if (selectedGroup == null) {
-        groups.map { it.first.name to it.second.toFloat() }
-    } else {
-        val groupRecords = DatabaseHelper.getGroupRecords(selectedGroup!!.id)
-        groupRecords.map { it.studentName to (it.correctAnswers.toFloat() / it.totalQuestions * 100) }
+    var stats by remember { mutableStateOf<List<Pair<String, Float>>>(emptyList()) }
+
+    LaunchedEffect(selectedGroup, groups, subjectId) {
+        if (selectedGroup == null) {
+            stats = groups.map { it.first.name to it.second.toFloat() }
+        } else {
+            AppContainer.localRepository.getGroupRecords(selectedGroup!!.id, subjectId).collect { groupRecords ->
+                stats = groupRecords.map { it.studentName to (it.correctAnswers.toFloat() / it.totalQuestions * 100) }
+            }
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize().background(AppDesign.BackgroundGradient)) {
@@ -548,7 +560,7 @@ fun MonitoringScreen(onBack: () -> Unit) {
                                 modifier = Modifier.weight(1f),
                                 label = "Faollik darajasi",
                                 value = if (stats.size > 10) "Yuqori" else if (stats.isNotEmpty()) "O'rtacha" else "Past",
-                                color = Color(0xFF6366F1),
+                                color = AppDesign.Indigo,
                                 icon = Icons.Default.Timeline
                             )
                             MetricCard(
@@ -559,7 +571,7 @@ fun MonitoringScreen(onBack: () -> Unit) {
                                     avg >= 60 -> "Yaxshi"
                                     else -> "Past"
                                 },
-                                color = Color(0xFF8B5CF6),
+                                color = AppDesign.Violet,
                                 icon = Icons.Default.Stars
                             )
                         }
@@ -575,16 +587,17 @@ fun MonitoringScreen(onBack: () -> Unit) {
 fun MetricCard(modifier: Modifier, label: String, value: String, color: Color, icon: ImageVector) {
     Surface(
         modifier = modifier,
-        color = Color(0xFFF8FAFC),
+        color = Color.White,
         shape = AppDesign.ComponentShape,
-        border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+        border = BorderStroke(4.dp, color.copy(alpha = 0.5f)),
+        shadowElevation = 6.dp
     ) {
         Row(
             modifier = Modifier.padding(24.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                modifier = Modifier.size(48.dp).background(color.copy(alpha = 0.1f), CircleShape),
+                modifier = Modifier.size(48.dp).background(color.copy(alpha = 0.15f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(24.dp))
@@ -592,7 +605,7 @@ fun MetricCard(modifier: Modifier, label: String, value: String, color: Color, i
             Spacer(Modifier.width(16.dp))
             Column {
                 Text(label, style = MaterialTheme.typography.labelSmall, color = Color(0xFF64748B), fontWeight = FontWeight.Bold)
-                Text(value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = Color(0xFF1E293B))
+                Text(value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = color)
             }
         }
     }

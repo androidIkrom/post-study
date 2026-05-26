@@ -9,14 +9,23 @@ import java.io.FileInputStream
 
 object PptConverter {
     fun convertSlidesToImages(filePath: String): List<BufferedImage> {
+        if (filePath.isBlank()) return emptyList()
         val file = File(filePath)
-        if (!file.exists()) return emptyList()
+        if (!file.exists()) {
+            println("POWERPOINT FILE NOT FOUND: $filePath")
+            return emptyList()
+        }
 
-        return if (filePath.endsWith(".pptx", ignoreCase = true)) {
-            renderPptx(file)
-        } else if (filePath.endsWith(".ppt", ignoreCase = true)) {
-            renderPpt(file)
-        } else {
+        return try {
+            if (filePath.endsWith(".pptx", ignoreCase = true)) {
+                renderPptx(file)
+            } else if (filePath.endsWith(".ppt", ignoreCase = true)) {
+                renderPpt(file)
+            } else {
+                emptyList()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
             emptyList()
         }
     }

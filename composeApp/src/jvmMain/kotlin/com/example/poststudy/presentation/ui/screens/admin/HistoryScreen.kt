@@ -8,6 +8,7 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -26,7 +27,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.poststudy.data.local.DatabaseHelper
+import com.example.poststudy.di.AppContainer
 import com.example.poststudy.domain.model.ExamRecord
 import com.example.poststudy.domain.model.Group
 import com.example.poststudy.domain.model.Student
@@ -39,7 +40,7 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HistoryScreen(onBack: () -> Unit) {
+fun HistoryScreen(subjectId: Int, onBack: () -> Unit) {
     var selectedTab by remember { mutableStateOf(HistoryTab.GROUPS) }
     
     // Navigation states
@@ -71,7 +72,7 @@ fun HistoryScreen(onBack: () -> Unit) {
             confirmText = "Hammasini tozalash",
             confirmColor = Color(0xFFEF4444),
             onConfirm = {
-                DatabaseHelper.clearAllExamRecords()
+                AppContainer.localRepository.clearAllExamRecords(subjectId)
                 showClearAllDialog = false
             }
         )
@@ -86,7 +87,7 @@ fun HistoryScreen(onBack: () -> Unit) {
             confirmColor = Color(0xFFEF4444),
             onConfirm = {
                 recordToDelete?.let {
-                    DatabaseHelper.deleteExamRecord(it.id)
+                    AppContainer.localRepository.deleteExamRecord(it.id)
                 }
                 recordToDelete = null
             }
@@ -190,6 +191,7 @@ fun HistoryScreen(onBack: () -> Unit) {
                     when (selectedTab) {
                         HistoryTab.GROUPS -> {
                             GroupsView(
+                                subjectId = subjectId,
                                 selectedGroup = selectedGroup,
                                 selectedStudent = selectedStudent,
                                 onGroupClick = { selectedGroup = it },
@@ -199,6 +201,7 @@ fun HistoryScreen(onBack: () -> Unit) {
                         }
                         HistoryTab.RECENT -> {
                             RecentView(
+                                subjectId = subjectId,
                                 selectedDate = selectedDate,
                                 onDateClick = { selectedDate = it },
                                 onDeleteRecord = { recordToDelete = it }
@@ -232,6 +235,7 @@ fun HistoryTabItem(modifier: Modifier, text: String, isSelected: Boolean, onClic
 
 @Composable
 fun GroupsView(
+    subjectId: Int,
     selectedGroup: Group?,
     selectedStudent: Student?,
     onGroupClick: (Group) -> Unit,
@@ -240,33 +244,46 @@ fun GroupsView(
 ) {
     when {
         selectedStudent != null -> {
-            val records = remember(selectedStudent) { DatabaseHelper.getStudentRecords(selectedStudent.id) }
-            RecordsList(records, onDeleteRecord)
+            var studentRecords by remember { mutableStateOf<List<ExamRecord>>(emptyList()) }
+            LaunchedEffect(selectedStudent) {
+                AppContainer.localRepository.getStudentRecords(selectedStudent.id).collect { studentRecords = it }
+            }
+            RecordsList(studentRecords, onDeleteRecord)
         }
         selectedGroup != null -> {
-            val students = remember(selectedGroup) { DatabaseHelper.getStudentsByGroup(selectedGroup.id) }
-            StudentsList(students, onStudentClick)
+            var groupStudents by remember { mutableStateOf<List<Student>>(emptyList()) }
+            LaunchedEffect(selectedGroup) {
+                AppContainer.localRepository.getStudentsByGroup(selectedGroup.id).collect { groupStudents = it }
+            }
+            StudentsList(groupStudents, onStudentClick)
         }
         else -> {
-            val groups = remember { DatabaseHelper.getAllGroups() }
-            GroupsList(groups, onGroupClick)
+            var allGroups by remember { mutableStateOf<List<Group>>(emptyList()) }
+            LaunchedEffect(subjectId) {
+                AppContainer.localRepository.getAllGroups(subjectId).collect { allGroups = it }
+            }
+            GroupsList(allGroups, onGroupClick)
         }
     }
 }
 
 @Composable
 fun RecentView(
+    subjectId: Int,
     selectedDate: String?,
     onDateClick: (String) -> Unit,
     onDeleteRecord: (ExamRecord) -> Unit
 ) {
+    var allRecords by remember { mutableStateOf<List<ExamRecord>>(emptyList()) }
+    LaunchedEffect(subjectId) {
+        AppContainer.localRepository.getAllExamRecords(subjectId).collect { allRecords = it }
+    }
+
     if (selectedDate != null) {
-        val allRecords = remember { DatabaseHelper.getAllExamRecords() }
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val records = allRecords.filter { sdf.format(Date(it.timestamp)) == selectedDate }
         RecordsList(records, onDeleteRecord)
     } else {
-        val allRecords = remember { DatabaseHelper.getAllExamRecords() }
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val dates = allRecords.map { sdf.format(Date(it.timestamp)) }.distinct()
         DatesList(dates, onDateClick)
@@ -282,8 +299,9 @@ fun GroupsList(groups: List<Group>, onGroupClick: (Group) -> Unit) {
             contentPadding = PaddingValues(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-                items(groups) { group ->
-                    SelectionCard(group.name, "Tinglovchilarni ko'rish", Icons.Default.Groups, Color(0xFF8B5CF6)) { onGroupClick(group) }
+                itemsIndexed(groups) { index, group ->
+                    val color = AppDesign.RainbowPalette[index % AppDesign.RainbowPalette.size]
+                    SelectionCard(group.name, "Tinglovchilarni ko'rish", Icons.Default.Groups, color) { onGroupClick(group) }
                 }
         }
     }
@@ -298,8 +316,9 @@ fun StudentsList(students: List<Student>, onStudentClick: (Student) -> Unit) {
             contentPadding = PaddingValues(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-                items(students) { student ->
-                    SelectionCard(student.name, "Natijalarni ko'rish", Icons.Default.Person, Color(0xFF6366F1)) { onStudentClick(student) }
+                itemsIndexed(students) { index, student ->
+                    val color = AppDesign.RainbowPalette[index % AppDesign.RainbowPalette.size]
+                    SelectionCard(student.name, "Natijalarni ko'rish", Icons.Default.Person, color) { onStudentClick(student) }
                 }
         }
     }
@@ -314,8 +333,9 @@ fun DatesList(dates: List<String>, onDateClick: (String) -> Unit) {
             contentPadding = PaddingValues(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-                items(dates) { date ->
-                    SelectionCard(date, "Shu kundagi natijalar", Icons.Default.Event, Color(0xFFF59E0B)) { onDateClick(date) }
+                itemsIndexed(dates) { index, date ->
+                    val color = AppDesign.RainbowPalette[index % AppDesign.RainbowPalette.size]
+                    SelectionCard(date, "Shu kundagi natijalar", Icons.Default.Event, color) { onDateClick(date) }
                 }
         }
     }
@@ -344,6 +364,7 @@ fun SelectionCard(title: String, subtitle: String, icon: ImageVector, color: Col
         shape = AppDesign.CardShape,
         colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        border = BorderStroke(4.dp, color.copy(alpha = 0.5f)),
         onClick = onClick
     ) {
         Row(
@@ -361,11 +382,11 @@ fun SelectionCard(title: String, subtitle: String, icon: ImageVector, color: Col
                 }
             }
             Column {
-                Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = color)
                 Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
             }
             Spacer(Modifier.weight(1f))
-            Icon(Icons.AutoMirrored.Filled.List, contentDescription = null, tint = Color.LightGray)
+            Icon(Icons.AutoMirrored.Filled.List, contentDescription = null, tint = color.copy(alpha = 0.3f))
         }
     }
 }

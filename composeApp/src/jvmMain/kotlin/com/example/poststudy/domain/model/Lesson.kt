@@ -12,7 +12,8 @@ data class Lesson(
     val testPath: String,
     val slideTimerSeconds: Int,
     val testTimerSeconds: Int,
-    val mode: LessonMode = LessonMode.ReAppropriation
+    val mode: LessonMode = LessonMode.ReAppropriation,
+    val subjectId: Int = 1
 )
 
 data class Exam(
@@ -20,5 +21,6 @@ data class Exam(
     val title: String,
     val testPath: String,
     val testTimerSeconds: Int,
-    val questionsPerStudent: Int
+    val questionsPerStudent: Int,
+    val subjectId: Int = 1
 )

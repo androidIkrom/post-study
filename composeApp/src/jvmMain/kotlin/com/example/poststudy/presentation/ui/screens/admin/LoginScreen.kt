@@ -16,7 +16,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.poststudy.data.local.DatabaseHelper
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import com.example.poststudy.di.AppContainer
 import com.example.poststudy.presentation.theme.AppDesign
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -25,7 +28,11 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onBack: () -> Unit
 ) {
-    var isRegistered by remember { mutableStateOf(DatabaseHelper.isUserRegistered()) }
+    var isRegistered by remember { mutableStateOf(false) }
+    
+    LaunchedEffect(Unit) {
+        AppContainer.localRepository.isUserRegistered().collect { isRegistered = it }
+    }
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
@@ -38,13 +45,18 @@ fun LoginScreen(
             errorMessage = "Parollar mos kelmadi"
         } else {
             if (!isRegistered) {
-                DatabaseHelper.registerUser(username, password)
+                AppContainer.localRepository.registerUser(username, password)
                 onLoginSuccess()
             } else {
-                if (DatabaseHelper.validateUser(username, password)) {
-                    onLoginSuccess()
-                } else {
-                    errorMessage = "Login yoki parol noto'g'ri"
+                val scope = CoroutineScope(Dispatchers.IO)
+                scope.launch {
+                    AppContainer.localRepository.validateUser(username, password).collect { isValid ->
+                        if (isValid) {
+                            onLoginSuccess()
+                        } else {
+                            errorMessage = "Login yoki parol noto'g'ri"
+                        }
+                    }
                 }
             }
         }
@@ -71,7 +83,7 @@ fun LoginScreen(
                         handleAction()
                         true
                     } else if (it.isCtrlPressed && it.isAltPressed && it.key == Key.One && it.type == KeyEventType.KeyDown) {
-                        DatabaseHelper.clearAllUsers()
+                        AppContainer.localRepository.clearAllUsers()
                         isRegistered = false
                         username = ""
                         password = ""
@@ -192,7 +204,7 @@ fun LoginScreen(
                         Spacer(modifier = Modifier.height(48.dp))
 
                         Button(
-                            onClick = handleAction,
+                            onClick = { handleAction() },
                             modifier = Modifier.fillMaxWidth().height(68.dp),
                             shape = AppDesign.ComponentShape,
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981), contentColor = Color.White),

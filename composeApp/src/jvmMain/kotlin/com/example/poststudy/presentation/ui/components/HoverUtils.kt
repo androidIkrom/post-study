@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
+import androidx.compose.ui.zIndex
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -22,7 +23,7 @@ fun Modifier.hoverEffect(
         targetValue = if (isHovered) scale else 1.0f,
         animationSpec = tween(durationMillis)
     )
-    
+
     val animatedOffset by animateFloatAsState(
         targetValue = if (isHovered) yOffset else 0f,
         animationSpec = tween(durationMillis)
@@ -31,9 +32,11 @@ fun Modifier.hoverEffect(
     return this
         .onPointerEvent(PointerEventType.Enter) { isHovered = true }
         .onPointerEvent(PointerEventType.Exit) { isHovered = false }
+        .zIndex(if (isHovered) 100f else 0f) // Increased zIndex significantly
         .graphicsLayer {
             scaleX = animatedScale
             scaleY = animatedScale
             translationY = animatedOffset
+            clip = false // Ensure no clipping happens at this layer
         }
 }

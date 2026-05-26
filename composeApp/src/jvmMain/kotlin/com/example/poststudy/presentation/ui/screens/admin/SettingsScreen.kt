@@ -17,7 +17,9 @@ import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.example.poststudy.data.local.DatabaseHelper
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import com.example.poststudy.di.AppContainer
 import com.example.poststudy.data.util.TestParser
 import com.example.poststudy.domain.model.*
 import com.example.poststudy.presentation.theme.AppDesign
@@ -31,11 +33,12 @@ import io.github.vinceglb.filekit.core.PlatformFile
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
+    subjectId: Int,
     lessonToEdit: Lesson? = null,
     onSaveComplete: () -> Unit,
     onBack: () -> Unit
 ) {
-    val initialSettings = remember { DatabaseHelper.getSettings() }
+    val initialSettings = remember { runBlocking { AppContainer.localRepository.getSettings(subjectId).first() } }
     
     var title by remember { mutableStateOf(lessonToEdit?.title ?: "") }
     var presentationPath by remember { mutableStateOf(lessonToEdit?.presentationPath ?: initialSettings.presentationPath) }
@@ -83,16 +86,17 @@ fun SettingsScreen(
             testPath = testPath,
             slideTimerSeconds = if (selectedMode == LessonMode.ReAppropriation) slideTimerVal * 60 else 0,
             testTimerSeconds = testTimerVal * 60,
-            mode = selectedMode
+            mode = selectedMode,
+            subjectId = subjectId
         )
         
         if (lessonToEdit == null) {
-            DatabaseHelper.addLesson(lesson)
+            AppContainer.localRepository.addLesson(lesson)
         } else {
-            DatabaseHelper.updateLesson(lesson)
+            AppContainer.localRepository.updateLesson(lesson)
         }
         
-        DatabaseHelper.saveSettings(presentationPath, testPath, slideTimerVal, testTimerVal, selectedMode, title, 0)
+        AppContainer.localRepository.saveSettings(presentationPath, testPath, slideTimerVal, testTimerVal, selectedMode, title, 0, subjectId)
         onSaveComplete()
     }
 

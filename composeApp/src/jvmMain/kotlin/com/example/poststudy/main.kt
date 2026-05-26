@@ -22,17 +22,16 @@ import androidx.compose.ui.window.rememberWindowState
 import org.jetbrains.compose.resources.painterResource
 import poststudy.composeapp.generated.resources.Res
 import poststudy.composeapp.generated.resources.icon
-import com.example.poststudy.data.local.DatabaseHelper
-import com.example.poststudy.data.network.NetworkManager
+import com.example.poststudy.di.AppContainer
 import com.example.poststudy.presentation.App
 
 fun main() = application {
-    DatabaseHelper.init()
+    AppContainer.localRepository.init()
     val windowState = rememberWindowState(placement = WindowPlacement.Maximized)
     
     Window(
         onCloseRequest = {
-            NetworkManager.stopServer()
+            AppContainer.networkRepository.stopServer()
             exitApplication()
         },
         title = "BreakPoint",

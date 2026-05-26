@@ -16,7 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.example.poststudy.data.local.DatabaseHelper
+import com.example.poststudy.di.AppContainer
 import com.example.poststudy.data.util.TestParser
 import com.example.poststudy.domain.model.Exam
 import com.example.poststudy.presentation.theme.AppDesign
@@ -27,6 +27,7 @@ import io.github.vinceglb.filekit.core.PickerType
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExamSettingsScreen(
+    subjectId: Int,
     examToEdit: Exam? = null,
     onSaveComplete: () -> Unit,
     onBack: () -> Unit
@@ -89,13 +90,14 @@ fun ExamSettingsScreen(
                 title = title,
                 testPath = testPath,
                 testTimerSeconds = tMin * 60,
-                questionsPerStudent = tCount
+                questionsPerStudent = tCount,
+                subjectId = subjectId
             )
 
             if (examToEdit == null) {
-                DatabaseHelper.addExam(exam)
+                AppContainer.localRepository.addExam(exam)
             } else {
-                DatabaseHelper.updateExam(exam)
+                AppContainer.localRepository.updateExam(exam)
             }
 
             // Also set as active session automatically? 

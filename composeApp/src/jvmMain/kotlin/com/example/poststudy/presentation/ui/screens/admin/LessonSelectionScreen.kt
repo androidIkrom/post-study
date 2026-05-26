@@ -5,7 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -20,7 +20,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.poststudy.data.local.DatabaseHelper
+import java.io.File
+import com.example.poststudy.di.AppContainer
 import com.example.poststudy.domain.model.Lesson
 import com.example.poststudy.domain.model.LessonMode
 import com.example.poststudy.presentation.theme.AppDesign
@@ -30,6 +31,7 @@ import com.example.poststudy.presentation.ui.components.PostStudyDialog
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LessonSelectionScreen(
+    subjectId: Int,
     isTeacher: Boolean = true,
     onLessonSelected: (Lesson) -> Unit,
     onAddNewLesson: () -> Unit,
@@ -41,10 +43,13 @@ fun LessonSelectionScreen(
     var isLoading by remember { mutableStateOf(true) }
     var lessonToDelete by remember { mutableStateOf<Lesson?>(null) }
 
-    LaunchedEffect(Unit) {
-        lessons.clear()
-        lessons.addAll(DatabaseHelper.getAllLessons())
-        isLoading = false
+    LaunchedEffect(subjectId) {
+        isLoading = true
+        AppContainer.localRepository.getAllLessons(subjectId).collect {
+            lessons.clear()
+            lessons.addAll(it)
+            isLoading = false
+        }
     }
 
     if (lessonToDelete != null) {
@@ -56,7 +61,7 @@ fun LessonSelectionScreen(
             confirmColor = Color(0xFFEF4444),
             onConfirm = {
                 lessonToDelete?.let {
-                    DatabaseHelper.deleteLesson(it.id)
+                    AppContainer.localRepository.deleteLesson(it.id)
                     lessons.remove(it)
                 }
                 lessonToDelete = null
@@ -123,12 +128,15 @@ fun LessonSelectionScreen(
                     columns = GridCells.Adaptive(minSize = 400.dp),
                     modifier = Modifier.fillMaxSize().padding(paddingValues).padding(32.dp),
                     horizontalArrangement = Arrangement.spacedBy(32.dp),
-                    verticalArrangement = Arrangement.spacedBy(32.dp)
+                    verticalArrangement = Arrangement.spacedBy(32.dp),
+                    contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp)
                 ) {
-                    items(lessons) { lesson ->
+                    itemsIndexed(lessons) { index, lesson ->
+                        val color = AppDesign.RainbowPalette[index % AppDesign.RainbowPalette.size]
                         LessonCard(
                             lesson = lesson,
                             isTeacher = isTeacher,
+                            themeColor = color,
                             onSelect = { onLessonSelected(lesson) },
                             onEdit = { onEditLesson(lesson) },
                             onDelete = { lessonToDelete = lesson }
@@ -144,16 +152,21 @@ fun LessonSelectionScreen(
 fun LessonCard(
     lesson: Lesson,
     isTeacher: Boolean,
+    themeColor: Color = Color(0xFF10B981),
     onSelect: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val presentationExists = if (lesson.mode == LessonMode.ReAppropriation) File(lesson.presentationPath).exists() else true
+    val testExists = File(lesson.testPath).exists()
+    val hasError = !presentationExists || !testExists
+
     Surface(
         onClick = onSelect,
         modifier = Modifier.fillMaxWidth().height(200.dp).hoverEffect(),
         shape = AppDesign.CardShape,
-        color = Color.White,
-        border = BorderStroke(3.dp, Color(0xFF10B981).copy(alpha = 0.4f)),
+        color = if (hasError) Color(0xFFFFF1F2) else Color.White,
+        border = BorderStroke(4.dp, if (hasError) Color.Red.copy(alpha = 0.5f) else themeColor.copy(alpha = 0.5f)),
         shadowElevation = 12.dp
     ) {
         Column(
@@ -170,23 +183,32 @@ fun LessonCard(
                         text = lesson.title,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Black,
-                        color = Color(0xFF1E293B)
+                        color = if (hasError) Color(0xFF991B1B) else themeColor
                     )
-                    Text(
-                        text = if (lesson.mode == LessonMode.ReAppropriation) "O'RGANISH VA TEST" else "FAQAT TEST",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = Color(0xFF10B981),
-                        fontWeight = FontWeight.Black
-                    )
+                    if (hasError) {
+                        Text(
+                            text = "FAYL TOPILMADI",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.Red,
+                            fontWeight = FontWeight.Bold
+                        )
+                    } else {
+                        Text(
+                            text = if (lesson.mode == LessonMode.ReAppropriation) "O'RGANISH VA TEST" else "FAQAT TEST",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = themeColor.copy(alpha = 0.8f),
+                            fontWeight = FontWeight.Black
+                        )
+                    }
                 }
                 
                 if (isTeacher) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         IconButton(
                             onClick = onEdit,
-                            modifier = Modifier.background(Color(0xFF3B82F6).copy(alpha = 0.1f), CircleShape)
+                            modifier = Modifier.background(themeColor.copy(alpha = 0.1f), CircleShape)
                         ) {
-                            Icon(Icons.Default.Edit, contentDescription = "Tahrirlash", tint = Color(0xFF3B82F6))
+                            Icon(Icons.Default.Edit, contentDescription = "Tahrirlash", tint = themeColor)
                         }
                         IconButton(
                             onClick = onDelete,
@@ -206,13 +228,13 @@ fun LessonCard(
                 InfoBadge(
                     icon = Icons.Default.Timer,
                     text = "${lesson.testTimerSeconds / 60} daq test",
-                    color = Color(0xFF3B82F6)
+                    color = themeColor
                 )
                 if (lesson.mode == LessonMode.ReAppropriation) {
                     InfoBadge(
                         icon = Icons.AutoMirrored.Filled.MenuBook,
                         text = "${lesson.slideTimerSeconds / 60} daq dars",
-                        color = Color(0xFFF59E0B)
+                        color = themeColor
                     )
                 }
             }
